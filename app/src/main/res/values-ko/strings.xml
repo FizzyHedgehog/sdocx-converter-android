@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">SDOCX 변환기</string>
     <string name="drop_hint">.sdocx 파일을 선택하거나 드래그하세요</string>
-    <string name="drop_subhint">'내 파일' 앱에서 파일을 끌어오거나 탭하여 선택</string>
+    <string name="drop_subhint">\'내 파일\' 앱에서 파일을 끌어오거나 탭하여 선택</string>
     <string name="btn_select_files">파일 선택</string>
     <string name="btn_convert_all">모두 PDF로 변환</string>
     <string name="btn_clear">목록 비우기</string>
