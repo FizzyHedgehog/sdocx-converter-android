@@ -36,7 +36,9 @@ jobs:
       - name: Build Rust Native JNI Libraries (.so)
         run: |
           mkdir -p app/src/main/jniLibs
-          cargo ndk -t arm64-v8a -t x86_64 --platform 26 -o app/src/main/jniLibs build --release --manifest-path rust-core/Cargo.toml
+          cd rust-core
+          cargo ndk -t arm64-v8a -t x86_64 --platform 26 -o ../app/src/main/jniLibs build --release
+          cd ..
           echo "Native libraries built:"
           ls -la app/src/main/jniLibs/arm64-v8a/
           ls -la app/src/main/jniLibs/x86_64/
