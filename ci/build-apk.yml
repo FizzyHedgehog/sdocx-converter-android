@@ -53,7 +53,7 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p dist
-          find app/build/outputs/apk/release/ -name "*.apk" -exec cp {} dist/SDOCX_Converter_Lite.apk \;
+          find app/build/outputs/apk/ -name "*.apk" -exec cp {} dist/SDOCX_Converter_Lite.apk \;
           ls -la dist/
 
       - name: Upload APK Artifact
