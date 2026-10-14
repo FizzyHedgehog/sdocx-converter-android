@@ -776,6 +776,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
 
 [[package]]
+name = "libloading"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "754ca22de805bb5744484a5b151a9e1a8e837d5dc232c2d7d8c2e3492edc8b60"
+dependencies = [
+ "cfg-if",
+ "windows-link",
+]
+
+[[package]]
 name = "libm"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1432,9 +1442,9 @@ dependencies = [
 
 [[package]]
 name = "scirs2-core"
-version = "0.5.1"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4b0d90e4183cf6757a52f6ab5bcc979a41c0f3b44613aaf432d18cdda49b650"
+checksum = "f7d5e6d0c09bd4a0307e073f6526d8b7b534e0fd9cd9ee644a73e169e08b45bd"
 dependencies = [
  "chrono",
  "crc32fast",
@@ -1443,6 +1453,7 @@ dependencies = [
  "crossbeam-utils",
  "getrandom 0.3.4",
  "getrandom 0.4.3",
+ "libloading",
  "ndarray",
  "ndarray-rand",
  "num-complex",
@@ -1466,9 +1477,9 @@ dependencies = [
 
 [[package]]
 name = "scirs2-interpolate"
-version = "0.5.1"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4eeeb4ec3af39ccab9dcd053b7858d96d6f6ae1397043919b0da7ed8a266e79a"
+checksum = "7b88ff7b1ed3b65a620b18beddbb98cb5d6e9216b697e459b58133cea3951463"
 dependencies = [
  "num_cpus",
  "ordered-float",
@@ -1481,9 +1492,9 @@ dependencies = [
 
 [[package]]
 name = "scirs2-linalg"
-version = "0.5.1"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acb2814f26cdfda582861fde208f2913716a8b0bbffac0d91994fa3bd4fe81be"
+checksum = "63cb568d47f1323c4c55b60386d78775a73f98692403e27ab00772d9355cc49c"
 dependencies = [
  "approx",
  "half",
@@ -1496,15 +1507,14 @@ dependencies = [
 
 [[package]]
 name = "scirs2-spatial"
-version = "0.5.1"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e206e239396dd77cbaa7d536fd504e5d8a7d8729ddc869e0f4ce1cbb6dd99e37"
+checksum = "0d433758503946feaa7cec8cfdaefcfaa88f31327a1c9485488b230695ea793d"
 dependencies = [
  "approx",
  "libc",
  "num-traits",
  "num_cpus",
- "rand 0.10.3",
  "scirs2-core",
  "statrs",
  "thiserror 2.0.21",

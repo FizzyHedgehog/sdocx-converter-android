@@ -14,7 +14,7 @@ anyhow = "1.0"
 itertools = "0.14"
 lerp = "0.5"
 num = "0.4"
-scirs2-interpolate = "0.5.0"
+scirs2-interpolate = "0.6.5"
 ndarray = "0.17"
 sdocx = { path = "./sdocx" }
 kahan = "0.1.4"
