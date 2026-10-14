@@ -23,7 +23,7 @@ jobs:
       - name: Setup Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android, x86_64-linux-android
+          targets: aarch64-linux-android
 
       - name: Install cargo-ndk
         run: cargo install cargo-ndk
@@ -37,11 +37,10 @@ jobs:
         run: |
           mkdir -p app/src/main/jniLibs
           cd rust-core
-          cargo ndk -t arm64-v8a -t x86_64 --platform 26 -o ../app/src/main/jniLibs build --release
+          cargo ndk -t arm64-v8a --platform 26 -o ../app/src/main/jniLibs build --release
           cd ..
           echo "Native libraries built:"
           ls -la app/src/main/jniLibs/arm64-v8a/
-          ls -la app/src/main/jniLibs/x86_64/
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4

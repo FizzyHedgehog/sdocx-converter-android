@@ -15,6 +15,7 @@ itertools = "0.14"
 lerp = "0.5"
 num = "0.4"
 scirs2-interpolate = "0.6.5"
+scirs2-core = { version = "0.6.5", features = ["libc"] }
 ndarray = "0.17"
 sdocx = { path = "./sdocx" }
 kahan = "0.1.4"
