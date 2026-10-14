@@ -1,0 +1,136 @@
+use crate::{
+    Box2d, Point2d,
+    byte_stream::{BoundedStream, ByteStreamLe, TryParse, UnfinishedParsingError},
+    impl_try_from_for_optional_from,
+    page::object::{
+        LineColourEffect, LineStyleEffect,
+        base::{HasObjectBase, ObjectBase},
+        header::{FlagBlockError, ObjectHeaderError, try_parse_object_header},
+        shape_base::{ShapeBase, ShapeBaseParseError},
+        shared::{Path, PathParseError},
+    },
+    read_size_and_vec, unpack_field_flags,
+};
+use num::FromPrimitive;
+use num_derive::FromPrimitive;
+use std::io::{Read, Seek};
+use thiserror::Error;
+
+#[derive(Debug, FromPrimitive)]
+pub enum ConnectorType {
+    /// `CONNECTOR_BEGIN`
+    Begin = 0,
+
+    /// `CONNECTOR_END`
+    End = 1,
+}
+
+impl_try_from_for_optional_from!(ConnectorType, u8, from_u8, pub InvalidConnectorTypeError);
+
+#[derive(Error, Debug)]
+#[error(transparent)]
+pub enum LineParseError {
+    Io(#[from] std::io::Error),
+    Base(#[from] ShapeBaseParseError),
+    Header(#[from] ObjectHeaderError),
+    FlagBlock(#[from] FlagBlockError),
+    ConnectorType(#[from] InvalidConnectorTypeError),
+    Path(#[from] PathParseError),
+    Unfinished(#[from] UnfinishedParsingError),
+}
+
+#[derive(Debug)]
+#[expect(dead_code)]
+pub struct Line {
+    shape_base: ShapeBase,
+    connector_type: ConnectorType,
+    start_direction: u8,
+    control_points: Vec<Point2d<f64>>,
+    start_point: Point2d<f64>,
+    end_point: Point2d<f64>,
+    original_drawn_rect: Box2d<f64>,
+    original_rect: Box2d<f64>,
+    original_angle: f32,
+    default_pen_name_id: Option<u32>,
+    pen_style_id: Option<u32>,
+    pen_name_id: Option<u32>,
+    path: Option<Path>,
+}
+
+impl Line {
+    pub const fn start(&self) -> Point2d<f64> {
+        self.start_point
+    }
+
+    pub const fn end(&self) -> Point2d<f64> {
+        self.end_point
+    }
+
+    pub fn colour_effect(&self) -> Option<&LineColourEffect> {
+        self.shape_base.line_colour_effect()
+    }
+
+    pub fn style(&self) -> Option<&LineStyleEffect> {
+        self.shape_base.line_style()
+    }
+
+    pub const fn has_control_points(&self) -> bool {
+        !self.control_points.is_empty()
+    }
+}
+
+impl<R: Read + Seek> TryParse<R> for Line {
+    type ParseError = LineParseError;
+
+    fn try_parse(stream: &mut R) -> Result<Line, LineParseError> {
+        let shape_base = ShapeBase::try_parse(stream)?;
+
+        let (mut flag_block, mut stream) = try_parse_object_header(stream, 8)?;
+
+        let connector_type: ConnectorType = stream.read_u8()?.try_into()?;
+        let start_direction = stream.read_u8()?;
+
+        let control_points = read_size_and_vec!(stream, u8, Point2d::try_parse(&mut stream)?);
+
+        let start_point = Point2d::try_parse(&mut stream)?;
+        let end_point = Point2d::try_parse(&mut stream)?;
+
+        let original_drawn_rect = Box2d::try_parse(&mut stream)?;
+        let original_rect = Box2d::try_parse(&mut stream)?;
+        let original_angle = stream.read_f32_le()?;
+
+        let field_flags = flag_block.init_flex(&mut stream)?;
+
+        unpack_field_flags!(field_flags, {
+            0 => default_pen_name_id: stream.read_u32_le()?;
+            1 => pen_style_id: stream.read_u32_le()?;
+            2 => pen_name_id: stream.read_u32_le()?;
+            3 => path: Path::try_parse(&mut stream)?;
+        });
+
+        flag_block.ensure_flags_used()?;
+        stream.ensure_eof()?;
+
+        Ok(Line {
+            shape_base,
+            connector_type,
+            start_direction,
+            control_points,
+            start_point,
+            end_point,
+            original_drawn_rect,
+            original_rect,
+            original_angle,
+            default_pen_name_id,
+            pen_style_id,
+            pen_name_id,
+            path,
+        })
+    }
+}
+
+impl HasObjectBase for Line {
+    fn object_base(&self) -> &ObjectBase {
+        self.shape_base.object_base()
+    }
+}

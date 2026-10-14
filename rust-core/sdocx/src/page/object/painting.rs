@@ -1,0 +1,75 @@
+use std::io::{Read, Seek};
+
+use thiserror::Error;
+
+use crate::{
+    Box2d,
+    byte_stream::{BoundedStream, ByteStreamLe, TryParse, UnfinishedParsingError},
+    page::object::{
+        base::{HasObjectBase, ObjectBase, ObjectBaseParseError},
+        header::{FlagBlockError, ObjectHeaderError, try_parse_object_header},
+    },
+    try_parse_i32_box, unpack_field_flags,
+};
+
+#[derive(Error, Debug)]
+#[error(transparent)]
+pub enum PaintingParseError {
+    Io(#[from] std::io::Error),
+    Base(#[from] ObjectBaseParseError),
+    Header(#[from] ObjectHeaderError),
+    FlagBlock(#[from] FlagBlockError),
+    Unfinished(#[from] UnfinishedParsingError),
+}
+
+#[derive(Debug)]
+#[expect(dead_code)]
+pub struct Painting {
+    object_base: ObjectBase,
+
+    attached_file_id: Option<u32>,
+    attached_thumbnail_id: Option<u32>,
+
+    crop_rect: Option<Box2d<f64>>,
+    original_rect: Option<Box2d<f64>>,
+
+    ratio: f32,
+}
+
+impl<R: Read + Seek> TryParse<R> for Painting {
+    type ParseError = PaintingParseError;
+
+    fn try_parse(stream: &mut R) -> Result<Painting, PaintingParseError> {
+        let object_base = ObjectBase::try_parse(stream)?;
+
+        let (mut flag_block, mut stream) = try_parse_object_header(stream, 14)?;
+
+        let field_flags = flag_block.init_flex(&mut stream)?;
+
+        unpack_field_flags!(field_flags, {
+            0 => attached_file_id: stream.read_u32_le()?;
+            1 => attached_thumbnail_id: stream.read_u32_le()?;
+            2 => ratio: stream.read_f32_le()?, else 1.0;
+            3 => crop_rect: try_parse_i32_box(&mut stream)?;
+            4 => original_rect: Box2d::try_parse(&mut stream)?;
+        });
+
+        flag_block.ensure_flags_used()?;
+        stream.ensure_eof()?;
+
+        Ok(Painting {
+            object_base,
+            attached_file_id,
+            attached_thumbnail_id,
+            crop_rect,
+            original_rect,
+            ratio,
+        })
+    }
+}
+
+impl HasObjectBase for Painting {
+    fn object_base(&self) -> &ObjectBase {
+        &self.object_base
+    }
+}

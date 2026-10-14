@@ -1,0 +1,699 @@
+use std::io::Read;
+
+use krilla::{
+    color::rgb,
+    geom::PathBuilder,
+    num::NormalizedF32,
+    paint::{Fill, FillRule, LineCap, LineJoin, Stroke},
+};
+use log::{error, info, warn};
+use sdocx::{
+    MediaStorage, SdocxSpace,
+    euclid::{self, Angle, Transform2D},
+    page::object::{
+        ArrowShape, CapType, FillEffect, FillImageEffect, ImageData, ImagePixelsUnit, JoinType,
+        LineColourEffect, LineStyleEffect, PathSegment, Shape, Template,
+    },
+};
+use thiserror::Error;
+
+use crate::page::PageConversionCtx;
+use crate::pdf;
+
+// --▶
+// Vertices are named for an arrowhead pointing to the right.
+const NORMAL_ARROW: [pdf::Point2d; 3] = [
+    // Top
+    pdf::Point2d::new(-1.0, -0.5),
+    // Apex
+    pdf::Point2d::new(0.0, 0.0),
+    // Bottom
+    pdf::Point2d::new(-1.0, 0.5),
+];
+
+/// Returns `[top, apex, bottom]` if the angle to the horizontal is zero, and the transformed
+/// equivalents otherwise.
+fn normal_arrow_vertices_ordered(
+    apex_at: pdf::Point2d,
+    angle_to_horizontal: Angle<f64>,
+    size_unit: f64,
+) -> [pdf::Point2d; 3] {
+    let tx = Transform2D::<f64, pdf::PdfSpace, pdf::PdfSpace>::scale(size_unit, size_unit)
+        .then_rotate(angle_to_horizontal)
+        .then_translate(apex_at.to_vector());
+
+    NORMAL_ARROW.map(|p| tx.transform_point(p))
+}
+
+fn doc_point_to_pdf(p: sdocx::Point2d<f64>) -> pdf::Point2d {
+    <(f64, f64)>::from(p).into()
+}
+
+fn check_line_style(ls: &LineStyleEffect) {
+    match (ls.compound_type, ls.dash_type) {
+        (sdocx::page::object::CompoundType::Simple, sdocx::page::object::DashType::Solid) => (),
+        (_, _) => {
+            warn!("Alternative compound line types and dash types are not yet supported");
+        }
+    }
+}
+
+fn bgra_to_fill([b, g, r, a]: [u8; 4]) -> Fill {
+    Fill {
+        paint: rgb::Color::new(r, g, b).into(),
+        opacity: NormalizedF32::new(a as f32 / 255.0).unwrap(),
+        rule: FillRule::NonZero,
+    }
+}
+
+#[derive(Debug, Error)]
+#[error("there is no style information with which to draw the path")]
+pub struct NoStyleError;
+
+#[derive(Debug, Error)]
+pub enum PathDrawingError {
+    #[error("no style was set for the path, and no image was drawn")]
+    NothingDrawn(NoStyleError),
+
+    #[error("found extra segment after closure")]
+    SegmentAfterClose,
+
+    #[error("arc path segments are currently unsupported")]
+    ArcUnsupported,
+
+    #[error("oval path segments are currently unsupported")]
+    OvalUnsupported,
+
+    #[error("invalid quadratic Bézier segment")]
+    BadQuad,
+}
+
+#[derive(Debug)]
+struct StrokeStyle {
+    bgra: [u8; 4],
+    width: f32,
+    join: JoinType,
+    cap: CapType,
+}
+
+trait PathDrawingCtx {
+    fn draw_path_with_stroke_fill_style(
+        &mut self,
+        stroke_style: Option<StrokeStyle>,
+        fill: Option<Fill>,
+        path_fn: impl FnOnce(&mut PathBuilder) -> Result<(), PathDrawingError>,
+    ) -> Result<(), PathDrawingError>;
+}
+
+pub trait ShapeDrawingCtx {
+    fn draw_line(
+        &mut self,
+        start: sdocx::Point2d<f64>,
+        end: sdocx::Point2d<f64>,
+        lc: Option<&LineColourEffect>,
+        ls: Option<&LineStyleEffect>,
+    ) -> Result<(), NoStyleError>;
+
+    fn draw_shape(
+        &mut self,
+        shape: &Shape,
+        media: &mut MediaStorage,
+    ) -> Result<(), PathDrawingError>;
+}
+
+impl PathDrawingCtx for PageConversionCtx<'_> {
+    fn draw_path_with_stroke_fill_style(
+        &mut self,
+        stroke_style: Option<StrokeStyle>,
+        fill: Option<Fill>,
+        path_fn: impl FnOnce(&mut PathBuilder) -> Result<(), PathDrawingError>,
+    ) -> Result<(), PathDrawingError> {
+        let (filling, stroking) = (fill.is_some(), stroke_style.is_some());
+
+        if !filling && !stroking {
+            return Err(PathDrawingError::NothingDrawn(NoStyleError));
+        }
+
+        self.surface.set_fill(fill);
+
+        if let Some(StrokeStyle {
+            bgra: [b, g, r, a],
+            width,
+            join,
+            cap,
+        }) = stroke_style
+        {
+            self.surface.set_stroke(Some({
+                let line_cap = match cap {
+                    CapType::Butt => LineCap::Butt,
+                    CapType::Round => LineCap::Round,
+                    CapType::Square => LineCap::Square,
+                };
+
+                let line_join = match join {
+                    JoinType::Miter => LineJoin::Miter,
+                    JoinType::Round => LineJoin::Round,
+                    JoinType::Bevel => LineJoin::Bevel,
+                };
+
+                Stroke {
+                    paint: rgb::Color::new(r, g, b).into(),
+                    width,
+                    opacity: NormalizedF32::new(a as f32 / 255.0).unwrap(),
+                    line_cap,
+                    line_join,
+                    ..Stroke::default()
+                }
+            }));
+        } else {
+            self.surface.set_stroke(None);
+        }
+
+        let mut pb = PathBuilder::new();
+        path_fn(&mut pb)?;
+
+        if let Some(path) = pb.finish() {
+            self.surface.draw_path(&path);
+        }
+
+        Ok(())
+    }
+}
+
+fn specify_path_by_segments(
+    segments: &[PathSegment],
+    pb: &mut PathBuilder,
+) -> Result<(), PathDrawingError> {
+    let mut last_point: Option<pdf::Point2d> = None;
+    let mut found_close = false;
+
+    for s in segments {
+        if found_close {
+            return Err(PathDrawingError::SegmentAfterClose);
+        }
+
+        match s {
+            &PathSegment::MoveTo(p) => {
+                let p = doc_point_to_pdf(p);
+                last_point = Some(p);
+                pb.move_to(p.x as f32, p.y as f32);
+            }
+
+            &PathSegment::LineTo(p) => {
+                let p = doc_point_to_pdf(p);
+                last_point = Some(p);
+                pb.line_to(p.x as f32, p.y as f32);
+            }
+
+            &PathSegment::CubicTo { cp1, cp2, p3 } => {
+                let cp1 = doc_point_to_pdf(cp1);
+                let cp2 = doc_point_to_pdf(cp2);
+                let p3 = doc_point_to_pdf(p3);
+                last_point = Some(p3);
+                pb.cubic_to(
+                    cp1.x as f32,
+                    cp1.y as f32,
+                    cp2.x as f32,
+                    cp2.y as f32,
+                    p3.x as f32,
+                    p3.y as f32,
+                );
+            }
+
+            &PathSegment::QuadTo {
+                cp1: quad_control,
+                p2: end,
+            } => {
+                let Some(start) = last_point else {
+                    return Err(PathDrawingError::BadQuad);
+                };
+
+                let quad_control = doc_point_to_pdf(quad_control);
+                let end = doc_point_to_pdf(end);
+
+                // Convert the quadratic Bézier to a cubic one.
+                // https://fontforge.org/docs/techref/bezier.html#converting-truetype-to-postscript
+                let cp1 = (((quad_control - start) * 2.0) / 3.0 + start.to_vector()).to_point();
+                let cp2 = (((quad_control - end) * 2.0) / 3.0 + end.to_vector()).to_point();
+
+                last_point = Some(end);
+
+                pb.cubic_to(
+                    cp1.x as f32,
+                    cp1.y as f32,
+                    cp2.x as f32,
+                    cp2.y as f32,
+                    end.x as f32,
+                    end.y as f32,
+                );
+            }
+
+            // todo: Implement these
+            PathSegment::ArcTo { .. } => return Err(PathDrawingError::ArcUnsupported),
+            PathSegment::AddOval(..) => return Err(PathDrawingError::OvalUnsupported),
+
+            PathSegment::Close => {
+                found_close = true;
+                pb.close();
+            }
+        }
+    }
+
+    Ok(())
+}
+
+impl ShapeDrawingCtx for PageConversionCtx<'_> {
+    fn draw_line(
+        &mut self,
+        start: sdocx::Point2d<f64>,
+        end: sdocx::Point2d<f64>,
+        lc: Option<&LineColourEffect>,
+        ls: Option<&LineStyleEffect>,
+    ) -> Result<(), NoStyleError> {
+        if lc.is_none() && ls.is_none() {
+            return Err(NoStyleError);
+        }
+
+        let start: pdf::Point2d = (start.x, start.y).into();
+        let end: pdf::Point2d = (end.x, end.y).into();
+
+        let lc = match lc {
+            Some(lc) => lc,
+            None => &LineColourEffect::default(),
+        };
+
+        let ls = match ls {
+            Some(ls) => {
+                check_line_style(ls);
+                ls
+            }
+            None => &LineStyleEffect::default(),
+        };
+
+        let line_vec = end - start;
+        let line_angle = line_vec.angle_from_x_axis();
+
+        let start_arrow_points = match ls.begin_arrow_shape {
+            ArrowShape::None => None,
+            arrow_shape => {
+                if !matches!(arrow_shape, ArrowShape::Arrow) {
+                    // todo: Implement other arrowheads
+                    warn!("Only the basic arrowhead is implemented");
+                }
+
+                Some(normal_arrow_vertices_ordered(
+                    start,
+                    // Arrow at the start points away from the end, so rotate 180 degrees.
+                    line_angle + Angle::pi(),
+                    ls.begin_arrow_size.unit(ls.width as _),
+                ))
+            }
+        };
+
+        let end_arrow_points = match ls.end_arrow_shape {
+            ArrowShape::None => None,
+            arrow_shape => {
+                if !matches!(arrow_shape, ArrowShape::Arrow) {
+                    warn!("Only the basic arrowhead is implemented");
+                }
+
+                Some(normal_arrow_vertices_ordered(
+                    end,
+                    line_angle,
+                    ls.end_arrow_size.unit(ls.width as _),
+                ))
+            }
+        };
+
+        // If there are arrowheads, we need to clip the line so that it does not poke out from
+        // behind them. At an end where there is an arrowhead, the clipping path conforms to the
+        // shape of the arrow. At an end where there is not, we need the line to fit inside the
+        // clipping path. To do that, we assume the line has butt caps and think of it as a
+        // rectangle. The corners of the clipping path at the non-arrow end are found by padding
+        // this rectangle with some multiple of the stroke width such that regardless of the line
+        // caps, the padded rectangle contains the line.
+        let pushed_arrow_clip = match (start_arrow_points, end_arrow_points) {
+            (None, None) => false,
+            _ => {
+                let width = ls.width as f64;
+                let no_arrow_clip_pad = width * 3.0;
+
+                let line_dir = line_vec.normalize();
+                let up = pdf::Vector2d::new(line_dir.y, -line_dir.x) * width;
+                let down = pdf::Vector2d::new(-line_dir.y, line_dir.x) * width;
+
+                let mut clip = PathBuilder::new();
+
+                match start_arrow_points {
+                    // Start is rotated, so order is bottom, apex, top
+                    Some([bottom, apex, top]) => {
+                        clip.move_to(bottom.x as f32, bottom.y as f32);
+                        clip.line_to(apex.x as f32, apex.y as f32);
+                        clip.line_to(top.x as f32, top.y as f32);
+                    }
+                    None => {
+                        let start_plus_pad = start - line_dir * no_arrow_clip_pad;
+
+                        // As promised: No arrowhead at this end, so just add a butt cap with
+                        // padding so that it won't clip the line itself.
+                        let padded_down = start_plus_pad + down * no_arrow_clip_pad;
+                        let padded_up = start_plus_pad + up * no_arrow_clip_pad;
+
+                        clip.move_to(padded_down.x as f32, padded_down.y as f32);
+                        clip.line_to(padded_up.x as f32, padded_up.y as f32);
+                    }
+                };
+
+                match end_arrow_points {
+                    Some([top, apex, bottom]) => {
+                        clip.line_to(top.x as f32, top.y as f32);
+                        clip.line_to(apex.x as f32, apex.y as f32);
+                        clip.line_to(bottom.x as f32, bottom.y as f32);
+                    }
+                    None => {
+                        let end_plus_pad = end + line_dir * no_arrow_clip_pad;
+
+                        let padded_up = end_plus_pad + up * no_arrow_clip_pad;
+                        let padded_down = end_plus_pad + down * no_arrow_clip_pad;
+
+                        clip.line_to(padded_up.x as f32, padded_up.y as f32);
+                        clip.line_to(padded_down.x as f32, padded_down.y as f32);
+                    }
+                };
+
+                clip.close();
+                let clip_path = clip.finish().unwrap();
+
+                self.surface.push_clip_path(&clip_path, &FillRule::NonZero);
+
+                // "Yes, we pushed a clip path"
+                true
+            }
+        };
+
+        // Draw the line itself.
+        let line_res = self.draw_path_with_stroke_fill_style(
+            Some(StrokeStyle {
+                bgra: lc.solid_colour_bgra(),
+                width: ls.width,
+                join: ls.join_type,
+                cap: ls.cap_type,
+            }),
+            // No fill
+            None,
+            |pb| {
+                pb.move_to(start.x as f32, start.y as f32);
+                pb.line_to(end.x as f32, end.y as f32);
+                Ok(())
+            },
+        );
+
+        // There's style information and a valid path, so...
+        line_res.expect("straight line path drawing should not fail");
+
+        for arrow_points in [start_arrow_points, end_arrow_points].into_iter().flatten() {
+            let arrow_res = self.draw_path_with_stroke_fill_style(
+                None,
+                // The arrowheads are part of the line, but they are filled, so the line stroke
+                // becomes the arrowhead fill.
+                Some(bgra_to_fill(lc.solid_colour_bgra())),
+                |pb| {
+                    pb.move_to(arrow_points[0].x as f32, arrow_points[0].y as f32);
+                    pb.line_to(arrow_points[1].x as f32, arrow_points[1].y as f32);
+                    pb.line_to(arrow_points[2].x as f32, arrow_points[2].y as f32);
+                    Ok(())
+                },
+            );
+
+            // Similarly:
+            arrow_res.expect("arrowhead path drawing should not fail");
+        }
+
+        if pushed_arrow_clip {
+            self.surface.pop();
+        }
+
+        Ok(())
+    }
+
+    fn draw_shape(
+        &mut self,
+        shape: &Shape,
+        media: &mut MediaStorage,
+    ) -> Result<(), PathDrawingError> {
+        let Some(template) = shape.template() else {
+            return Err(PathDrawingError::NothingDrawn(NoStyleError));
+        };
+
+        // To set a stroke style we require a line colour effect, regardless of whether there is a
+        // line style effect. If there is an LCE but no LSE, we use a default LSE.
+        let stroke_style = shape.line_colour_effect().and_then(|lc| {
+            let ls = match shape.line_style() {
+                Some(ls) => {
+                    // If a line style was specified but it has zero width, we're not stroking.
+                    if ls.width == 0.0 {
+                        return None;
+                    }
+
+                    check_line_style(ls);
+                    ls
+                }
+
+                None => &LineStyleEffect::default(),
+            };
+
+            Some(StrokeStyle {
+                bgra: lc.solid_colour_bgra(),
+                width: ls.width,
+                join: ls.join_type,
+                cap: ls.cap_type,
+            })
+        });
+
+        // Path drawing might report an invisibility error, but if we know we've drawn an image,
+        // it's not an issue.
+        let mut drew_image = false;
+
+        let path_fill = match shape.fill_effect() {
+            Some(FillEffect::Colour(fce)) => {
+                if !fce.colour_type.is_solid() {
+                    warn!(
+                        "Only solid fill colours are supported; found colour type '{}'",
+                        fce.colour_type
+                    );
+                }
+
+                Some(bgra_to_fill(fce.solid_colour_bgra()))
+            }
+
+            Some(FillEffect::Image(effect)) => {
+                if let Err(err) = self.draw_image(effect, template, shape.image_data(), media) {
+                    match err {
+                        ImageDrawingError::FailedToOpen(error, n) => {
+                            error!("Failed to open image '{n}': {error}")
+                        }
+
+                        ImageDrawingError::FailedToRead(error, n) => {
+                            error!("Opened but failed to read image '{n}': {error}")
+                        }
+
+                        ImageDrawingError::NotValidJpeg { name, .. } => {
+                            error!(
+                                "Image '{name}' is not a (valid) JPEG. \
+                                It may be an SPI file; this is a proprietary format \
+                                which is not yet supported."
+                            )
+                        }
+
+                        ImageDrawingError::ImagePathMissing => {
+                            warn!("Found image fill without valid path");
+                        }
+                    }
+                } else {
+                    drew_image = true;
+                }
+
+                None
+            }
+
+            Some(other) => {
+                warn!("Fill effect '{other}' is not yet supported");
+                None
+            }
+
+            None => None,
+        };
+
+        match self.draw_path_with_stroke_fill_style(stroke_style, path_fill, |pb| {
+            specify_path_by_segments(template.path.segments(), pb)
+        }) {
+            Err(PathDrawingError::NothingDrawn(_)) if drew_image => Ok(()),
+            other => other,
+        }
+    }
+}
+
+#[derive(Debug, Error)]
+pub enum ImageDrawingError {
+    #[error("failed to open image file '{1}'")]
+    FailedToOpen(std::io::Error, String),
+
+    #[error("successfully opened image file '{1}', but failed to read it")]
+    FailedToRead(std::io::Error, String),
+
+    #[error("image '{name}' is not a valid JPEG")]
+    NotValidJpeg { krilla_err: String, name: String },
+
+    #[error("there is no path for the image")]
+    ImagePathMissing,
+}
+
+trait ImageDrawingCtx {
+    fn draw_image(
+        &mut self,
+        effect: &FillImageEffect,
+        template: &Template,
+        image_data: &ImageData,
+        media: &mut MediaStorage,
+    ) -> Result<(), ImageDrawingError>;
+}
+
+impl ImageDrawingCtx for PageConversionCtx<'_> {
+    fn draw_image(
+        &mut self,
+        effect: &FillImageEffect,
+        template: &Template,
+        image_data: &ImageData,
+        media: &mut MediaStorage,
+    ) -> Result<(), ImageDrawingError> {
+        let image_name = effect
+            .image_name()
+            .ok_or(ImageDrawingError::ImagePathMissing)?;
+
+        let mut image_reader = media
+            .open_file(image_name)
+            .map_err(|err| ImageDrawingError::FailedToOpen(err, image_name.into()))?;
+
+        let mut image_bytes = Vec::new();
+
+        if let Err(err) = image_reader.read_to_end(&mut image_bytes) {
+            return Err(ImageDrawingError::FailedToRead(err, image_name.into()));
+        }
+
+        let image =
+            krilla::image::Image::from_jpeg(image_bytes.into(), true).map_err(|krilla_err| {
+                ImageDrawingError::NotValidJpeg {
+                    krilla_err,
+                    name: image_name.into(),
+                }
+            })?;
+
+        // Original box on page (without rotation), crop box (in pixels, with (0, 0) at the top left of the image), and
+        // x and y scales to get from image space to SDOCX space.
+        let crop_info = image_data
+            .original_rect
+            .zip(image_data.crop_rect)
+            .map(|(o, c)| {
+                (o.cast::<f32>(), c.cast::<f32>(), {
+                    let (image_w, image_h) = image.size();
+
+                    let x_scale = euclid::Scale::<f32, ImagePixelsUnit, SdocxSpace>::new(
+                        o.width() as f32 / image_w as f32,
+                    );
+
+                    let y_scale = euclid::Scale::<f32, ImagePixelsUnit, SdocxSpace>::new(
+                        o.height() as f32 / image_h as f32,
+                    );
+
+                    (x_scale, y_scale)
+                })
+            });
+
+        let (crop_offset_x, crop_offset_y) = match crop_info.as_ref() {
+            Some((_, crop_box, (x_scale, y_scale))) => {
+                (crop_box.min.x * x_scale.0, crop_box.min.y * y_scale.0)
+            }
+            None => (0.0, 0.0),
+        };
+
+        let unrotated_dest: sdocx::Box2d<f32> = template.owner_rect.cast();
+
+        self.surface
+            .push_transform(&krilla::geom::Transform::from_translate(
+                unrotated_dest.min.x - crop_offset_x,
+                unrotated_dest.min.y - crop_offset_y,
+            ));
+
+        self.surface
+            .push_transform(&krilla::geom::Transform::from_rotate_at(
+                template.rotation,
+                unrotated_dest.width() / 2.0 + crop_offset_x,
+                unrotated_dest.height() / 2.0 + crop_offset_y,
+            ));
+
+        // Use negative scales to apply vertical/horizontal flips. (The app ignores flips in the
+        // exported PDFs, so we're actually intentionally diverging from what it does here.)
+        self.surface.push_transform(&{
+            let scale_x = if template.is_flipped_horizontally {
+                -1.0
+            } else {
+                1.0
+            };
+
+            let scale_y = if template.is_flipped_vertically {
+                -1.0
+            } else {
+                1.0
+            };
+
+            let centre_x = unrotated_dest.width() / 2.0 + crop_offset_x;
+            let centre_y = unrotated_dest.height() / 2.0 + crop_offset_y;
+
+            krilla::geom::Transform::from_row(
+                scale_x,
+                0.0,
+                0.0,
+                scale_y,
+                centre_x * (1.0 - scale_x),
+                centre_y * (1.0 - scale_y),
+            )
+        });
+
+        // !!! - We could push_opacity here, but the image fill effect's alpha means nothing
+
+        if let Some((orig_box, crop_rect, (x_scale, y_scale))) = crop_info.as_ref() {
+            let mut cp_builder = PathBuilder::new();
+            cp_builder.move_to(crop_rect.min.x * x_scale.0, crop_rect.min.y * y_scale.0);
+            cp_builder.line_to(crop_rect.max.x * x_scale.0, crop_rect.min.y * y_scale.0);
+            cp_builder.line_to(crop_rect.max.x * x_scale.0, crop_rect.max.y * y_scale.0);
+            cp_builder.line_to(crop_rect.min.x * x_scale.0, crop_rect.max.y * y_scale.0);
+            cp_builder.close();
+
+            let clip_path = cp_builder.finish().unwrap();
+            self.surface.push_clip_path(&clip_path, &FillRule::NonZero);
+
+            self.surface.draw_image(
+                image,
+                krilla::geom::Size::from_wh(orig_box.width(), orig_box.height()).unwrap(),
+            );
+
+            // Pop the clip path.
+            self.surface.pop();
+        } else {
+            self.surface.draw_image(
+                image,
+                krilla::geom::Size::from_wh(unrotated_dest.width(), unrotated_dest.height())
+                    .unwrap(),
+            );
+        }
+
+        info!("Drew image '{image_name}'");
+
+        // Transforms
+        self.surface.pop();
+        self.surface.pop();
+        self.surface.pop();
+
+        Ok(())
+    }
+}

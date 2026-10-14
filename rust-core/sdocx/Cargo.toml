@@ -1,0 +1,25 @@
+[package]
+name = "sdocx"
+version = "0.3.4"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+byteorder = "1"
+chrono = { version = "0.4.43", default-features = false, features = [
+    "std",
+    "alloc",
+] }
+sha2 = "0.10.9"
+num = "0.4"
+num-traits = "0.2"
+num-derive = "0.4"
+thiserror = "2"
+zip = { version = "8", default-features = false, features = [
+    "deflate",
+    "deflate64",
+] }
+either = "1.16.0"
+strum = { version = "0.28", features = ["derive"] }
+log = "0.4"
+euclid = "0.22"
