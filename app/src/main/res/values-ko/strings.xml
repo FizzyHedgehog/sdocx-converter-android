@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">SDOCX 변환기</string>
+    <string name="drop_hint">.sdocx 파일을 선택하거나 드래그하세요</string>
+    <string name="drop_subhint">'내 파일' 앱에서 파일을 끌어오거나 탭하여 선택</string>
+    <string name="btn_select_files">파일 선택</string>
+    <string name="btn_convert_all">모두 PDF로 변환</string>
+    <string name="btn_clear">목록 비우기</string>
+    <string name="title_queue">변환 대기열</string>
+    <string name="title_settings">환경설정</string>
+    <string name="title_about">앱 정보 및 오픈소스 라이선스</string>
+    <string name="pen_scale_label">펜 굵기 배율</string>
+    <string name="marker_scale_label">형광펜 굵기 배율</string>
+    <string name="status_pending">대기 중</string>
+    <string name="status_converting">변환 중…</string>
+    <string name="status_completed">변환 완료</string>
+    <string name="status_error">오류 발생</string>
+    <string name="license_notice">squ1dd13의 sdocx2pdf 오픈소스 엔진(MIT 라이선스)을 기반으로 제작되었습니다.\nCopyright © 2026 FizzyHedgehog. All rights reserved.</string>
+</resources>

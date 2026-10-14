@@ -1,0 +1,14 @@
+[package]
+name = "sdocx-jni"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "sdocx2pdf"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+jni = "0.21"
+anyhow = "1.0"
+krilla = { version = "0.8.2", features = ["pdf"] }
+sdocx = { path = "../../sdocx2pdf-upstream/sdocx" }
