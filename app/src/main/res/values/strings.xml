@@ -87,6 +87,7 @@
     <string name="delete_selected_dialog_title">Delete Files</string>
     <string name="delete_selected_dialog_message">A total of %1$d files will be deleted.</string>
     <string name="btn_dialog_confirm_select">Select</string>
+    <string name="btn_dialog_cancel">Cancel</string>
     <string name="app_version_label">Version %1$s</string>
 
     <!-- Add Source Dialog -->
