@@ -22,7 +22,12 @@ try:
 except ImportError:
     notify_telegram = None
 
-TOKEN = "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"
+TOKEN = os.environ.get("GITHUB_TOKEN", "")
+if not TOKEN:
+    token_file = os.path.expanduser("~/.config/github_token.txt")
+    if os.path.exists(token_file):
+        with open(token_file, "r", encoding="utf-8") as f:
+            TOKEN = f.read().strip()
 REPO = "FizzyHedgehog/sdocx-converter-android"
 SSL_CTX = ssl._create_unverified_context()
 OUTPUT_DIR = os.path.expanduser("~/Desktop")
