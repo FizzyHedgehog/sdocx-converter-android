@@ -20,7 +20,8 @@ import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 @Composable
 fun DropZone(
     onSelectFilesClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false
 ) {
     Card(
         modifier = modifier
@@ -33,13 +34,13 @@ fun DropZone(
             )
             .clickable { onSelectFilesClick() },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(28.dp),
+                .padding(if (isCompact) 14.dp else 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -47,15 +48,15 @@ fun DropZone(
                 imageVector = Icons.Rounded.AddCircleOutline,
                 contentDescription = null,
                 tint = SamsungOrange,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(if (isCompact) 36.dp else 48.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(if (isCompact) 6.dp else 12.dp))
             Text(
                 text = stringResource(R.string.drop_hint),
-                style = MaterialTheme.typography.titleMedium,
+                style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = stringResource(R.string.drop_subhint),
                 style = MaterialTheme.typography.bodySmall,

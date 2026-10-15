@@ -1,5 +1,6 @@
 package com.fizzyhedgehog.sdocxconverter.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.PictureAsPdf
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -143,35 +145,38 @@ fun MainScreen(
         }
     ) { innerPadding ->
         if (isTabletOrDeX) {
-            // 태블릿 / 삼성 DeX 모드: 좌측(드롭존 42%) + 우측 2단 분할(대기열 50% / 완료파일 50%)
+            // 태블릿 / 삼성 DeX 모드:
+            // 좌측(파일 추가 + 변환 대기열 48%) + 구분선 + 우측(변환 완료 파일 52%)
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 24.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // 좌측 패널: 드롭존 및 파일 선택
-                Box(modifier = Modifier.weight(0.42f)) {
-                    DropZone(
-                        onSelectFilesClick = onSelectFilesClick,
-                        modifier = Modifier.fillMaxHeight()
-                    )
-                }
-
-                // 우측 패널: 상단(변환 대기열) + 하단(변환 완료 파일)
+                // [좌측 패널]: 파일 추가(드롭존) + 변환 대기열
                 Column(
                     modifier = Modifier
-                        .weight(0.58f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .weight(0.48f)
+                        .fillMaxHeight()
                 ) {
-                    // 1. 상단: 변환 대기열 (Top 50%)
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    ) {
+                    if (pendingItems.isEmpty()) {
+                        // 대기열이 비어있을 때는 드롭존이 좌측 전체를 시원하게 차지
+                        DropZone(
+                            onSelectFilesClick = onSelectFilesClick,
+                            isCompact = false,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        // 대기열에 파일이 있을 때는 드롭존이 상단에 컴팩트하게 자리하고, 아래에 대기열 목록 표시
+                        DropZone(
+                            onSelectFilesClick = onSelectFilesClick,
+                            isCompact = true,
+                            modifier = Modifier.height(145.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -184,164 +189,173 @@ fun MainScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            if (pendingItems.isNotEmpty()) {
-                                TextButton(
-                                    onClick = { viewModel.clearQueue() },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            TextButton(
+                                onClick = { viewModel.clearQueue() },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.btn_clear_queue),
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+                        }
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            items(pendingItems, key = { it.id }) { item ->
+                                QueueFileCard(
+                                    item = item,
+                                    onRemoveClick = { viewModel.removeFile(item.id) }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 중앙 세로 구분선
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .padding(vertical = 8.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                )
+
+                // [우측 패널]: 변환 완료 파일 전용 영역
+                Column(
+                    modifier = Modifier
+                        .weight(0.52f)
+                        .fillMaxHeight()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = stringResource(R.string.title_completed),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            if (completedItems.isNotEmpty()) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = SuccessGreen.copy(alpha = 0.15f)
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.btn_clear_queue),
-                                        style = MaterialTheme.typography.labelMedium
+                                        text = "${completedItems.size}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SuccessGreen,
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                                     )
                                 }
                             }
                         }
 
-                        if (pendingItems.isEmpty()) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
+                        if (completedItems.isNotEmpty()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(
+                                    onClick = { openPdfFolder(context) },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.FolderOpen,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = stringResource(R.string.empty_queue),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = stringResource(R.string.btn_open_folder),
+                                        style = MaterialTheme.typography.labelMedium
                                     )
                                 }
-                            }
-                        } else {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                items(pendingItems, key = { it.id }) { item ->
-                                    QueueFileCard(
-                                        item = item,
-                                        onRemoveClick = { viewModel.removeFile(item.id) }
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                TextButton(
+                                    onClick = { viewModel.clearCompleted() },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.btn_clear_completed),
+                                        style = MaterialTheme.typography.labelMedium
                                     )
                                 }
                             }
                         }
                     }
 
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                        thickness = 1.dp
-                    )
-
-                    // 2. 하단: 변환 완료 파일 (Bottom 50%)
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    ) {
-                        Row(
+                    if (completedItems.isEmpty()) {
+                        Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .fillMaxHeight(),
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = stringResource(R.string.title_completed),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                if (completedItems.isNotEmpty()) {
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = SuccessGreen.copy(alpha = 0.15f)
-                                    ) {
-                                        Text(
-                                            text = "${completedItems.size}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = SuccessGreen,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            if (completedItems.isNotEmpty()) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    TextButton(
-                                        onClick = { openPdfFolder(context) },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.FolderOpen,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = stringResource(R.string.btn_open_folder),
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(4.dp))
-
-                                    TextButton(
-                                        onClick = { viewModel.clearCompleted() },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.btn_clear_completed),
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        if (completedItems.isEmpty()) {
-                            Surface(
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                    .fillMaxSize()
+                                    .padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
                             ) {
                                 Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            RoundedCornerShape(16.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.empty_completed),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    Icon(
+                                        imageVector = Icons.Rounded.PictureAsPdf,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(32.dp)
                                     )
                                 }
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Text(
+                                    text = stringResource(R.string.empty_completed),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = stringResource(R.string.empty_completed_hint),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
-                        } else {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                items(completedItems, key = { it.id }) { item ->
-                                    ConvertedPdfCard(
-                                        item = item,
-                                        onOpenPdf = { item.outputPdfUri?.let { openPdf(context, it) } },
-                                        onOpenFolder = { openPdfFolder(context) },
-                                        onShare = {
-                                            item.outputPdfUri?.let {
-                                                sharePdf(context, it, item.outputPdfName ?: item.name)
-                                            }
-                                        },
-                                        onRemoveClick = { viewModel.removeFile(item.id) }
-                                    )
-                                }
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(9.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(completedItems, key = { it.id }) { item ->
+                                ConvertedPdfCard(
+                                    item = item,
+                                    onOpenPdf = { item.outputPdfUri?.let { openPdf(context, it) } },
+                                    onOpenFolder = { openPdfFolder(context) },
+                                    onShare = {
+                                        item.outputPdfUri?.let {
+                                            sharePdf(context, it, item.outputPdfName ?: item.name)
+                                        }
+                                    },
+                                    onRemoveClick = { viewModel.removeFile(item.id) }
+                                )
                             }
                         }
                     }

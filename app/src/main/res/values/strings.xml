@@ -9,6 +9,7 @@
     <string name="title_completed">Converted PDF Files</string>
     <string name="empty_queue">No pending .sdocx files.</string>
     <string name="empty_completed">No converted PDF files yet.</string>
+    <string name="empty_completed_hint">Add .sdocx files on the left to start converting.</string>
     <string name="btn_open_pdf">Open PDF</string>
     <string name="btn_open_folder">Show in Folder</string>
     <string name="btn_share">Share</string>

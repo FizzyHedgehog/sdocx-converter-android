@@ -9,6 +9,7 @@
     <string name="title_completed">변환 완료 파일</string>
     <string name="empty_queue">대기 중인 .sdocx 파일이 없습니다.</string>
     <string name="empty_completed">변환 완료된 PDF 파일이 없습니다.</string>
+    <string name="empty_completed_hint">왼쪽에서 .sdocx 파일을 추가하고 변환을 시작하세요.</string>
     <string name="btn_open_pdf">PDF 열기</string>
     <string name="btn_open_folder">폴더 열기</string>
     <string name="btn_share">공유</string>
