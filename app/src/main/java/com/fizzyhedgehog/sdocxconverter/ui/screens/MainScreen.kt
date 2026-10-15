@@ -542,7 +542,10 @@ fun MainScreen(
                         onSelectFilesClick = onSelectFilesClick,
                         onSelectFolderClick = onSelectFolderClick,
                         onCardClick = { showAddSourceDialog = true },
-                        modifier = Modifier.fillMaxWidth().height(180.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .defaultMinSize(minHeight = 160.dp)
                     )
                 }
 
