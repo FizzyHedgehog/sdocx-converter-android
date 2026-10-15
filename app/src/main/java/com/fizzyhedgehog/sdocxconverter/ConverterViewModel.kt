@@ -316,7 +316,7 @@ class ConverterViewModel : ViewModel() {
         }
     }
 
-    fun exportBatchPdfsToDownloads(sourceUris: List<Uri>, context: Context, subFolder: String = "SDOCX_PDF") {
+    fun exportBatchPdfsToDownloads(sourceUris: List<Uri>, context: Context, subFolder: String = "") {
         viewModelScope.launch(Dispatchers.IO) {
             val resolver = context.contentResolver
             var savedCount = 0
@@ -368,9 +368,10 @@ class ConverterViewModel : ViewModel() {
                     _fileList.value = _fileList.value.map {
                         if (it.outputPdfUri in savedUris) it.copy(isSavedToDevice = true) else it
                     }
+                    val folderLabel = if (subFolder.isEmpty()) "다운로드" else "다운로드($subFolder)"
                     Toast.makeText(
                         context,
-                        "${savedCount}개 파일이 다운로드(SDOCX_PDF) 폴더에 저장되었습니다.",
+                        "${savedCount}개 파일이 ${folderLabel} 폴더에 저장되었습니다.",
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
@@ -568,7 +569,7 @@ class ConverterViewModel : ViewModel() {
             put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/SDOCX_PDF")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
         }

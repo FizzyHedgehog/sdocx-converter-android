@@ -117,7 +117,7 @@ fun BatchSaveDialog(
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "내 파일 > 다운로드 > SDOCX_PDF\n(시스템 권한 차단 없이 즉시 저장)",
+                                text = "내 파일 > 다운로드\n(시스템 권한 차단 없이 즉시 저장)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

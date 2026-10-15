@@ -57,7 +57,7 @@ fun openPdf(context: Context, uri: Uri) {
 
 fun openPdfFolder(context: Context) {
     var opened = false
-    val folderPath = "/storage/emulated/0/Download/SDOCX_PDF"
+    val folderPath = "/storage/emulated/0/Download"
 
     // 1. 삼성 갤럭시 '내 파일' 전용 인텐트 (갤럭시 탭 최우선 지원)
     try {
@@ -69,10 +69,10 @@ fun openPdfFolder(context: Context) {
         opened = true
     } catch (_: Exception) {}
 
-    // 2. SAF 특정 폴더(SDOCX_PDF) 열기
+    // 2. SAF 다운로드 폴더 열기
     if (!opened) {
         try {
-            val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload%2FSDOCX_PDF")
+            val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload")
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "vnd.android.document/directory")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -107,7 +107,7 @@ fun openPdfFolder(context: Context) {
     }
 
     if (!opened) {
-        Toast.makeText(context, context.getString(R.string.toast_pdf_folder_hint), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "내 파일 > 다운로드 폴더를 확인하세요.", Toast.LENGTH_SHORT).show()
     }
 }
 

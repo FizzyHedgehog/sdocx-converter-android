@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.PictureAsPdf
 import androidx.compose.material.icons.rounded.SaveAlt
@@ -351,15 +352,32 @@ fun MainScreen(
                             ) {
                                 FilledTonalButton(
                                     onClick = {
-                                        showBatchSaveDialog = true
+                                        val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                        if (uris.isNotEmpty()) {
+                                            viewModel.exportBatchPdfsToDownloads(uris, context)
+                                            isSelectionMode = false
+                                            selectedIds = emptySet()
+                                        }
                                     },
                                     enabled = selectedIds.isNotEmpty(),
                                     modifier = Modifier.weight(1f),
                                     contentPadding = PaddingValues(vertical = 6.dp)
                                 ) {
-                                    Icon(Icons.Rounded.SaveAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp), tint = SamsungOrange)
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("파일에 저장", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    Text("다운로드에 저장", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                }
+
+                                IconButton(
+                                    onClick = { showBatchSaveDialog = true },
+                                    enabled = selectedIds.isNotEmpty(),
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.FolderOpen,
+                                        contentDescription = "다른 폴더 선택",
+                                        tint = if (selectedIds.isNotEmpty()) SamsungOrange else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                    )
                                 }
 
                                 Button(
@@ -618,15 +636,32 @@ fun MainScreen(
                                 ) {
                                     FilledTonalButton(
                                         onClick = {
-                                            showBatchSaveDialog = true
+                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                            if (uris.isNotEmpty()) {
+                                                viewModel.exportBatchPdfsToDownloads(uris, context)
+                                                isSelectionMode = false
+                                                selectedIds = emptySet()
+                                            }
                                         },
                                         enabled = selectedIds.isNotEmpty(),
                                         modifier = Modifier.weight(1f),
                                         contentPadding = PaddingValues(vertical = 4.dp)
                                     ) {
-                                        Icon(Icons.Rounded.SaveAlt, contentDescription = null, modifier = Modifier.size(14.dp))
+                                        Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(14.dp), tint = SamsungOrange)
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("파일에 저장", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        Text("다운로드에 저장", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    IconButton(
+                                        onClick = { showBatchSaveDialog = true },
+                                        enabled = selectedIds.isNotEmpty(),
+                                        modifier = Modifier.size(34.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.FolderOpen,
+                                            contentDescription = "다른 폴더 선택",
+                                            tint = if (selectedIds.isNotEmpty()) SamsungOrange else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                        )
                                     }
 
                                     Button(
