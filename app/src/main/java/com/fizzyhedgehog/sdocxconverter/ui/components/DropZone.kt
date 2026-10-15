@@ -36,6 +36,7 @@ fun DropZone(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         )
+    ) {
         if (isCompact) {
             Row(
                 modifier = Modifier
