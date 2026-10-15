@@ -87,6 +87,43 @@
     <string name="delete_selected_dialog_title">파일 삭제</string>
     <string name="delete_selected_dialog_message">총 %1$d개의 파일이 삭제됩니다.</string>
     <string name="btn_dialog_confirm_select">선택</string>
-    <string name="btn_dialog_cancel">취소</string>
     <string name="app_version_label">버전 %1$s</string>
+
+    <!-- 문서 추가 방식 선택 다이얼로그 -->
+    <string name="add_source_title">문서 추가 방식 선택</string>
+    <string name="add_source_desc">안드로이드 보안 정책상 파일 다중 선택과 폴더 선택 탐색기가 각각 구분되어 실행됩니다.</string>
+    <string name="add_source_files_title">파일 선택 (다중 선택)</string>
+    <string name="add_source_files_desc">원하는 .sdocx 파일들을 자유롭게 다중 선택합니다.</string>
+    <string name="add_source_folder_title">폴더 선택 (내부 노트 전체)</string>
+    <string name="add_source_folder_desc">선택한 폴더 내의 모든 .sdocx 노트를 일괄 추가합니다.</string>
+    <string name="btn_close">닫기</string>
+
+    <!-- 선택 툴바 및 공통 액션 -->
+    <string name="btn_select">선택</string>
+    <string name="items_selected_count">%1$d개 선택됨</string>
+    <string name="btn_converting_progress">변환 진행 중…</string>
+    <string name="btn_ok">확인</string>
+    <string name="btn_cancel">취소</string>
+    <string name="action_add_source">파일 또는 폴더 추가</string>
+
+    <!-- 설정 다이얼로그 추가 항목 -->
+    <string name="specified_folder">지정된 폴더</string>
+    <string name="downloads_folder_label">📥 다운로드 폴더 (내 파일 > 다운로드)</string>
+    <string name="btn_select_another_folder">다른 폴더 지정…</string>
+    <string name="saf_downloads_warning">안드로이드 보안 정책상 시스템 탐색기에서는 다운로드 최상위 폴더 선택이 차단되므로, 다운로드 폴더 저장을 원하시면 [다운로드 폴더 (기본값)]을 선택해 주세요.</string>
+
+    <!-- 카드 및 토스트 알림 추가 항목 -->
+    <string name="status_saved_suffix"> · 저장됨</string>
+    <string name="not_saved_dialog_title">기기 미저장</string>
+    <string name="not_saved_dialog_message">기기에 저장되어 있지 않습니다. 저장할 위치를 정해주세요.</string>
+    <string name="btn_choose_save_location">저장 위치 정하기</string>
+    <string name="toast_check_downloads">내 파일 > 다운로드 폴더를 확인하세요.</string>
+    <string name="error_no_share_files">공유할 파일이 선택되지 않았습니다.</string>
+    <string name="error_share_failed">공유 실패: %1$s</string>
+    <string name="error_batch_share_failed">다중 공유 실패: %1$s</string>
+    <string name="error_read_failed">파일을 읽을 수 없습니다.</string>
+    <string name="error_native_engine">변환 엔진 오류 (코드: %1$d)</string>
+    <string name="error_native_not_loaded">네이티브 변환 엔진(libsdocx2pdf.so)이 탑재되지 않았습니다.</string>
+    <string name="error_unknown">알 수 없는 오류</string>
+    <string name="folder_saved_success">%1$d개 파일이 %2$s 폴더에 저장되었습니다.</string>
 </resources>

@@ -156,10 +156,11 @@ fun SettingsDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
+                            val defaultFolderFallback = stringResource(R.string.specified_folder)
                             val currentFolderText = if (defaultSaveTreeUri != null) {
-                                "📂 ${defaultSaveTreeName ?: "지정된 폴더"}"
+                                "📂 ${defaultSaveTreeName ?: defaultFolderFallback}"
                             } else {
-                                "📥 다운로드 폴더 (내 파일 > 다운로드)"
+                                stringResource(R.string.downloads_folder_label)
                             }
                             Text(
                                 text = currentFolderText,
@@ -194,7 +195,7 @@ fun SettingsDialog(
                                 ) {
                                     Icon(Icons.Rounded.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("다른 폴더 지정…", style = MaterialTheme.typography.labelSmall)
+                                    Text(stringResource(R.string.btn_select_another_folder), style = MaterialTheme.typography.labelSmall)
                                 }
                             }
 
@@ -216,7 +217,7 @@ fun SettingsDialog(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "안드로이드 보안 정책상 시스템 탐색기에서는 다운로드 최상위 폴더 선택이 차단되므로, 다운로드 폴더 저장을 원하시면 [다운로드 폴더 (기본값)]을 선택해 주세요.",
+                                        text = stringResource(R.string.saf_downloads_warning),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -309,12 +310,12 @@ fun SettingsDialog(
                     onDismiss()
                 }
             ) {
-                Text("확인", color = SamsungOrange, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.btn_ok), color = SamsungOrange, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("취소")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

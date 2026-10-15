@@ -47,7 +47,7 @@ fun BatchSaveDialog(
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "저장 위치 선택",
+                    text = stringResource(R.string.btn_save_to_custom_folder),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -59,7 +59,7 @@ fun BatchSaveDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "선택된 ${selectedCount}개의 PDF 파일을 저장할 방식을 선택하세요.",
+                    text = stringResource(R.string.save_success_batch, selectedCount),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -97,27 +97,14 @@ fun BatchSaveDialog(
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "다운로드 폴더에 바로 저장",
+                                    text = stringResource(R.string.btn_save_to_downloads),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = SamsungOrange
-                                ) {
-                                    Text(
-                                        text = "권장",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
-                                    )
-                                }
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "내 파일 > 다운로드\n(시스템 권한 차단 없이 즉시 저장)",
+                                text = stringResource(R.string.downloads_folder_label),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -141,8 +128,8 @@ fun BatchSaveDialog(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
+                                .size(40.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -157,7 +144,7 @@ fun BatchSaveDialog(
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "지정된 기본 폴더에 저장",
+                                    text = stringResource(R.string.save_folder_label),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -203,13 +190,13 @@ fun BatchSaveDialog(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "다른 폴더 직접 선택…",
+                                text = stringResource(R.string.btn_select_another_folder),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "시스템 탐색기에서 원하는 폴더 선택",
+                                text = stringResource(R.string.btn_save_to_custom_folder),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -235,7 +222,7 @@ fun BatchSaveDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "💡 안드로이드 정책상 '직접 선택' 시 '다운로드' 최상위 폴더는 시스템에서 선택을 차단합니다. 다운로드에 저장하시려면 [다운로드 폴더에 바로 저장]을 권장합니다.",
+                            text = stringResource(R.string.saf_downloads_warning),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -246,7 +233,7 @@ fun BatchSaveDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("취소")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

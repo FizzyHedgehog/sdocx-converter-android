@@ -107,7 +107,7 @@ fun openPdfFolder(context: Context) {
     }
 
     if (!opened) {
-        Toast.makeText(context, "내 파일 > 다운로드 폴더를 확인하세요.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.toast_check_downloads), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -122,18 +122,19 @@ fun sharePdf(context: Context, uri: Uri, title: String) {
         }
         context.startActivity(Intent.createChooser(shareIntent, title))
     } catch (e: Exception) {
-        Toast.makeText(context, "공유 실패: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.error_share_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
     }
 }
 
-fun shareMultiplePdfs(context: Context, uris: List<Uri>, title: String = "PDF 파일 일괄 공유") {
+fun shareMultiplePdfs(context: Context, uris: List<Uri>, title: String? = null) {
+    val shareTitle = title ?: context.getString(R.string.share_multi_title)
     if (uris.isEmpty()) {
-        Toast.makeText(context, "공유할 파일이 선택되지 않았습니다.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.error_no_share_files), Toast.LENGTH_SHORT).show()
         return
     }
 
     if (uris.size == 1) {
-        sharePdf(context, uris.first(), title)
+        sharePdf(context, uris.first(), shareTitle)
         return
     }
 
@@ -141,14 +142,14 @@ fun shareMultiplePdfs(context: Context, uris: List<Uri>, title: String = "PDF �
         val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
             type = "application/pdf"
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
-            putExtra(Intent.EXTRA_SUBJECT, title)
-            putExtra(Intent.EXTRA_TITLE, title)
+            putExtra(Intent.EXTRA_SUBJECT, shareTitle)
+            putExtra(Intent.EXTRA_TITLE, shareTitle)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        context.startActivity(Intent.createChooser(shareIntent, title))
+        context.startActivity(Intent.createChooser(shareIntent, shareTitle))
     } catch (e: Exception) {
-        Toast.makeText(context, "다중 공유 실패: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.error_batch_share_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -246,7 +247,7 @@ fun QueueFileCard(
                 IconButton(onClick = onRemoveClick) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = "삭제",
+                        contentDescription = stringResource(R.string.btn_delete_selected),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -270,14 +271,14 @@ fun ConvertedPdfCard(
 ) {
     val pdfDisplayName = item.outputPdfName ?: (item.name.substringBeforeLast(".") + ".pdf")
     val sizeText = formatFileSize(if (item.outputPdfSizeBytes > 0) item.outputPdfSizeBytes else item.sizeBytes)
-    val savedStatusText = if (item.isSavedToDevice) " · 저장됨" else ""
+    val savedStatusText = if (item.isSavedToDevice) stringResource(R.string.status_saved_suffix) else ""
     var showUnsavedDialog by remember { mutableStateOf(false) }
 
     if (showUnsavedDialog) {
         AlertDialog(
             onDismissRequest = { showUnsavedDialog = false },
-            title = { Text("기기 미저장", fontWeight = FontWeight.Bold) },
-            text = { Text("기기에 저장되어 있지 않습니다. 저장할 위치를 정해주세요.") },
+            title = { Text(stringResource(R.string.not_saved_dialog_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.not_saved_dialog_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -285,12 +286,12 @@ fun ConvertedPdfCard(
                         onSavePdf?.invoke()
                     }
                 ) {
-                    Text("저장 위치 정하기", color = SamsungOrange, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.btn_choose_save_location), color = SamsungOrange, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showUnsavedDialog = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -436,7 +437,7 @@ fun ConvertedPdfCard(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Close,
-                            contentDescription = "삭제",
+                            contentDescription = stringResource(R.string.btn_delete_selected),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier.size(18.dp)
                         )

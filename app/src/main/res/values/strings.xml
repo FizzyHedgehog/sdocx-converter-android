@@ -87,6 +87,43 @@
     <string name="delete_selected_dialog_title">Delete Files</string>
     <string name="delete_selected_dialog_message">A total of %1$d files will be deleted.</string>
     <string name="btn_dialog_confirm_select">Select</string>
-    <string name="btn_dialog_cancel">Cancel</string>
     <string name="app_version_label">Version %1$s</string>
+
+    <!-- Add Source Dialog -->
+    <string name="add_source_title">Choose How to Add Documents</string>
+    <string name="add_source_desc">Due to Android security policies, multi-file picker and folder picker run separately.</string>
+    <string name="add_source_files_title">Select Files (Multi-Select)</string>
+    <string name="add_source_files_desc">Select multiple .sdocx files from your device.</string>
+    <string name="add_source_folder_title">Select Folder (All Notes Inside)</string>
+    <string name="add_source_folder_desc">Batch import all .sdocx notes within the selected folder.</string>
+    <string name="btn_close">Close</string>
+
+    <!-- Selection Bar & Common Actions -->
+    <string name="btn_select">Select</string>
+    <string name="items_selected_count">%1$d selected</string>
+    <string name="btn_converting_progress">Converting…</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="action_add_source">Add Files or Folder</string>
+
+    <!-- Settings dialog extra -->
+    <string name="specified_folder">Specified Folder</string>
+    <string name="downloads_folder_label">📥 Downloads Folder (My Files > Downloads)</string>
+    <string name="btn_select_another_folder">Select Another Folder…</string>
+    <string name="saf_downloads_warning">Due to Android security policies, selecting the root Downloads folder directly in the system picker is restricted. To save to Downloads, please use the default Downloads option.</string>
+
+    <!-- Card & Toast extras -->
+    <string name="status_saved_suffix"> · Saved</string>
+    <string name="not_saved_dialog_title">Not Saved to Device</string>
+    <string name="not_saved_dialog_message">This file is not saved to your device storage yet. Please choose a save location.</string>
+    <string name="btn_choose_save_location">Choose Save Location</string>
+    <string name="toast_check_downloads">Check My Files > Downloads folder.</string>
+    <string name="error_no_share_files">No files selected to share.</string>
+    <string name="error_share_failed">Share failed: %1$s</string>
+    <string name="error_batch_share_failed">Batch share failed: %1$s</string>
+    <string name="error_read_failed">Cannot read file.</string>
+    <string name="error_native_engine">Conversion engine error (code: %1$d)</string>
+    <string name="error_native_not_loaded">Native conversion engine (libsdocx2pdf.so) not loaded.</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="folder_saved_success">%1$d files saved to %2$s folder.</string>
 </resources>

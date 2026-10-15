@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
             } catch (_: Exception) {}
-            var folderName = "지정된 폴더"
+            var folderName = getString(R.string.specified_folder)
             try {
                 val doc = DocumentFile.fromTreeUri(this, treeUri)
                 doc?.name?.let { folderName = it }

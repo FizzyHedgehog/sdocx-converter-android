@@ -12,8 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.fizzyhedgehog.sdocxconverter.R
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 
 @Composable
@@ -41,7 +43,7 @@ fun AddSourceDialog(
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "문서 추가 방식 선택",
+                    text = stringResource(R.string.add_source_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -53,7 +55,7 @@ fun AddSourceDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "안드로이드 보안 정책상 파일 다중 선택과 폴더 선택 탐색기가 각각 구분되어 실행됩니다.",
+                    text = stringResource(R.string.add_source_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -91,13 +93,13 @@ fun AddSourceDialog(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "파일 선택 (다중 선택)",
+                                text = stringResource(R.string.add_source_files_title),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "원하는 .sdocx 파일들을 자유롭게 다중 선택합니다.",
+                                text = stringResource(R.string.add_source_files_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -138,13 +140,13 @@ fun AddSourceDialog(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "폴더 선택 (내부 노트 전체)",
+                                text = stringResource(R.string.add_source_folder_title),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "선택한 폴더 내의 모든 .sdocx 노트를 일괄 추가합니다.",
+                                text = stringResource(R.string.add_source_folder_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -156,7 +158,7 @@ fun AddSourceDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("닫기")
+                Text(stringResource(R.string.btn_close))
             }
         }
     )

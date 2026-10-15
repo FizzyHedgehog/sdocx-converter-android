@@ -121,7 +121,7 @@ class ConverterViewModel : ViewModel() {
             val namesStr = if (alreadyCompletedNames.size <= 2) {
                 alreadyCompletedNames.joinToString(", ")
             } else {
-                "${alreadyCompletedNames.first()} 외 ${alreadyCompletedNames.size - 1}개"
+                "${alreadyCompletedNames.first()} +${alreadyCompletedNames.size - 1}"
             }
             Toast.makeText(
                 context,
@@ -132,7 +132,7 @@ class ConverterViewModel : ViewModel() {
             val namesStr = if (alreadyQueuedNames.size <= 2) {
                 alreadyQueuedNames.joinToString(", ")
             } else {
-                "${alreadyQueuedNames.first()} 외 ${alreadyQueuedNames.size - 1}개"
+                "${alreadyQueuedNames.first()} +${alreadyQueuedNames.size - 1}"
             }
             Toast.makeText(
                 context,
@@ -152,7 +152,7 @@ class ConverterViewModel : ViewModel() {
 
             if (rootDoc == null || !rootDoc.exists()) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "폴더를 열 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.save_error), Toast.LENGTH_SHORT).show()
                 }
                 return@launch
             }
@@ -195,7 +195,7 @@ class ConverterViewModel : ViewModel() {
                     if (alreadyCompleted.isNotEmpty()) {
                         Toast.makeText(
                             context,
-                            context.getString(R.string.file_already_completed, "${alreadyCompleted.size}개 파일"),
+                            context.getString(R.string.file_already_completed, "${alreadyCompleted.size} files"),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -276,7 +276,7 @@ class ConverterViewModel : ViewModel() {
 
             if (targetDir == null || !targetDir.exists()) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "대상 폴더를 열 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.save_error), Toast.LENGTH_SHORT).show()
                 }
                 return@launch
             }
@@ -368,10 +368,11 @@ class ConverterViewModel : ViewModel() {
                     _fileList.value = _fileList.value.map {
                         if (it.outputPdfUri in savedUris) it.copy(isSavedToDevice = true) else it
                     }
-                    val folderLabel = if (subFolder.isEmpty()) "다운로드" else "다운로드($subFolder)"
+                    val downloadsLabel = context.getString(R.string.btn_save_folder_downloads)
+                    val folderLabel = if (subFolder.isEmpty()) downloadsLabel else "$downloadsLabel($subFolder)"
                     Toast.makeText(
                         context,
-                        "${savedCount}개 파일이 ${folderLabel} 폴더에 저장되었습니다.",
+                        context.getString(R.string.folder_saved_success, savedCount, folderLabel),
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
@@ -428,7 +429,7 @@ class ConverterViewModel : ViewModel() {
                         deviceUri = result.savedDeviceUri
                     )
                 } else {
-                    updateItemError(item.id, result.errorMessage ?: "변환 실패")
+                    updateItemError(item.id, result.errorMessage ?: context.getString(R.string.status_error))
                 }
             }
             _isConverting.value = false
@@ -478,7 +479,7 @@ class ConverterViewModel : ViewModel() {
                 FileOutputStream(tempInput).use { output ->
                     input.copyTo(output)
                 }
-            } ?: return ConversionResult(false, null, pdfName, 0L, "파일을 읽을 수 없습니다.")
+            } ?: return ConversionResult(false, null, pdfName, 0L, context.getString(R.string.error_read_failed))
 
             // 2. Native Rust 변환 엔진 호출
             if (NativeConverter.isNativeAvailable()) {
@@ -491,10 +492,10 @@ class ConverterViewModel : ViewModel() {
                     autoSplit = settings.autoSplit
                 )
                 if (exitCode != 0 || !finalLocalPdf.exists()) {
-                    return ConversionResult(false, null, pdfName, 0L, "변환 엔진 오류 (코드: $exitCode)")
+                    return ConversionResult(false, null, pdfName, 0L, context.getString(R.string.error_native_engine, exitCode))
                 }
             } else {
-                return ConversionResult(false, null, pdfName, 0L, "네이티브 변환 엔진(libsdocx2pdf.so)이 탑재되지 않았습니다.")
+                return ConversionResult(false, null, pdfName, 0L, context.getString(R.string.error_native_not_loaded))
             }
 
             tempInput.delete()
@@ -559,7 +560,7 @@ class ConverterViewModel : ViewModel() {
             )
         } catch (e: Exception) {
             tempInput.delete()
-            return ConversionResult(false, null, pdfName, 0L, e.localizedMessage ?: "알 수 없는 오류")
+            return ConversionResult(false, null, pdfName, 0L, e.localizedMessage ?: context.getString(R.string.error_unknown))
         }
     }
 
@@ -615,7 +616,7 @@ class ConverterViewModel : ViewModel() {
                 name,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "SDOCX to PDF 변환 완료 알림"
+                description = context.getString(R.string.notify_sublabel)
                 enableVibration(true)
             }
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager

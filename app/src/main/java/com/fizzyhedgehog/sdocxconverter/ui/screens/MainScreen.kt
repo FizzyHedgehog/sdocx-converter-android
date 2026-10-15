@@ -132,7 +132,7 @@ fun MainScreen(
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Text("변환 진행 중…", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.btn_converting_progress), fontWeight = FontWeight.Bold)
                             } else {
                                 Text(
                                     text = "${stringResource(R.string.btn_convert_all)} (${pendingItems.size})",
@@ -228,7 +228,7 @@ fun MainScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Add,
-                                    contentDescription = "파일 또는 폴더 추가",
+                                    contentDescription = stringResource(R.string.action_add_source),
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
@@ -295,7 +295,7 @@ fun MainScreen(
                                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = "선택",
+                                                text = stringResource(R.string.btn_select),
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 color = SamsungOrange
@@ -317,7 +317,7 @@ fun MainScreen(
                                 }
                             } else {
                                 Text(
-                                    text = "${selectedIds.size}개 선택됨",
+                                    text = stringResource(R.string.items_selected_count, selectedIds.size),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = SamsungOrange
@@ -335,7 +335,7 @@ fun MainScreen(
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
                                         Text(
-                                            text = if (selectedIds.size == completedItems.size) "전체 해제" else "전체 선택",
+                                            text = if (selectedIds.size == completedItems.size) stringResource(R.string.btn_deselect_all) else stringResource(R.string.btn_select_all),
                                             style = MaterialTheme.typography.labelMedium
                                         )
                                     }
@@ -350,7 +350,7 @@ fun MainScreen(
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
                                         Text(
-                                            text = "취소",
+                                            text = stringResource(R.string.btn_cancel),
                                             style = MaterialTheme.typography.labelMedium
                                         )
                                     }
@@ -569,7 +569,7 @@ fun MainScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Rounded.Add,
-                                        contentDescription = "파일 또는 폴더 추가",
+                                        contentDescription = stringResource(R.string.action_add_source),
                                         tint = SamsungOrange
                                     )
                                 }
@@ -637,7 +637,7 @@ fun MainScreen(
                                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = "선택",
+                                                text = stringResource(R.string.btn_select),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = SamsungOrange
@@ -655,7 +655,7 @@ fun MainScreen(
                                     }
                                 } else {
                                     Text(
-                                        text = "${selectedIds.size}개 선택됨",
+                                        text = stringResource(R.string.items_selected_count, selectedIds.size),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = SamsungOrange
@@ -672,7 +672,7 @@ fun MainScreen(
                                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = if (selectedIds.size == completedItems.size) "전체 해제" else "전체 선택",
+                                                text = if (selectedIds.size == completedItems.size) stringResource(R.string.btn_deselect_all) else stringResource(R.string.btn_select_all),
                                                 style = MaterialTheme.typography.labelSmall
                                             )
                                         }
@@ -684,7 +684,7 @@ fun MainScreen(
                                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = "취소",
+                                                text = stringResource(R.string.btn_cancel),
                                                 style = MaterialTheme.typography.labelSmall
                                             )
                                         }
