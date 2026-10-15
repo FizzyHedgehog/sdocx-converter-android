@@ -46,4 +46,33 @@
     <string name="status_completed">Completed</string>
     <string name="status_error">Error</string>
     <string name="license_notice">Developed with sdocx2pdf engine (MIT License, squ1dd13).\nCopyright © 2026 FizzyHedgehog. All rights reserved.</string>
+
+    <!-- Page split settings -->
+    <string name="split_mode_label">PDF Page Split Mode</string>
+    <string name="split_mode_none">Default (No Split)</string>
+    <string name="split_mode_portrait">A4 Portrait Split</string>
+    <string name="split_mode_landscape">A4 Landscape Split</string>
+    <string name="auto_split_label">Smart Page Split</string>
+    <string name="auto_split_sublabel">Intelligently splits pages based on stroke positions and margins.</string>
+
+    <!-- Storage settings -->
+    <string name="section_storage">Storage &amp; Saving</string>
+    <string name="auto_save_label">Auto-save to destination on completion</string>
+    <string name="auto_save_sublabel">When off, files stay in cache and can be saved manually to your chosen folder.</string>
+    <string name="save_folder_label">Default Save Folder</string>
+    <string name="save_folder_source_priority">Source Folder (Import location)</string>
+    <string name="btn_select_save_folder">Select Folder</string>
+    <string name="btn_reset_save_folder">Reset</string>
+
+    <!-- Notifications -->
+    <string name="section_notification">Notifications</string>
+    <string name="notify_label">Notify on completion</string>
+    <string name="notify_sublabel">Sends a notification when background conversion completes.</string>
+    <string name="notification_channel_name">Conversion Complete</string>
+    <string name="notification_single_body">Successfully converted \'%1$s\'.</string>
+    <string name="notification_multi_body">Successfully converted %1$d files to PDF.</string>
+
+    <!-- Duplicate alerts -->
+    <string name="file_already_completed">File has already been converted: %1$s</string>
+    <string name="file_already_queued">File is already in the conversion queue: %1$s</string>
 </resources>

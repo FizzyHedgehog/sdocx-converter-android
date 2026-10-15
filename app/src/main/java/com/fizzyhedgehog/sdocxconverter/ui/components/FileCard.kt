@@ -45,7 +45,11 @@ fun openPdf(context: Context, uri: Uri) {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
+        try {
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
+        }
     } catch (e: Exception) {
         Toast.makeText(context, context.getString(R.string.open_pdf_error), Toast.LENGTH_SHORT).show()
     }
@@ -102,7 +106,9 @@ fun openPdfFolder(context: Context) {
         } catch (_: Exception) {}
     }
 
-    Toast.makeText(context, context.getString(R.string.toast_pdf_folder_hint), Toast.LENGTH_SHORT).show()
+    if (!opened) {
+        Toast.makeText(context, context.getString(R.string.toast_pdf_folder_hint), Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun sharePdf(context: Context, uri: Uri, title: String) {
@@ -257,11 +263,12 @@ fun ConvertedPdfCard(
 ) {
     val pdfDisplayName = item.outputPdfName ?: (item.name.substringBeforeLast(".") + ".pdf")
     val sizeText = formatFileSize(if (item.outputPdfSizeBytes > 0) item.outputPdfSizeBytes else item.sizeBytes)
+    val savedStatusText = if (item.isSavedToDevice) " · 저장됨" else ""
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onOpenFolder() },
+            .clickable { onOpenPdf() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -315,7 +322,7 @@ fun ConvertedPdfCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "·  $sizeText",
+                        text = "·  $sizeText$savedStatusText",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

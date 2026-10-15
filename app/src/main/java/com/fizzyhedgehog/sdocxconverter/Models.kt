@@ -19,15 +19,21 @@ data class SdocxFileItem(
     val errorMessage: String? = null,
     val outputPdfUri: Uri? = null,
     val outputPdfName: String? = null,
-    val outputPdfSizeBytes: Long = 0L
+    val outputPdfSizeBytes: Long = 0L,
+    val parentFolderTreeUri: Uri? = null,
+    val isSavedToDevice: Boolean = false,
+    val savedDeviceUri: Uri? = null
 )
 
 data class ConverterSettings(
-    val penScale: Double = 1.0,
+    val penScale: Double = 1.5,
     val markerScale: Double = 1.0,
     val splitOption: String = "",
     val autoSplit: Boolean = false,
-    val keepOriginalInDownloads: Boolean = true
+    val autoSave: Boolean = false,
+    val defaultSaveTreeUri: String? = null,
+    val defaultSaveTreeName: String? = null,
+    val notifyOnCompletion: Boolean = true
 )
 
 object NativeConverter {

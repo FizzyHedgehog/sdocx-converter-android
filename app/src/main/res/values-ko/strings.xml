@@ -46,4 +46,33 @@
     <string name="status_completed">변환 완료</string>
     <string name="status_error">오류 발생</string>
     <string name="license_notice">squ1dd13의 sdocx2pdf 오픈소스 엔진(MIT 라이선스)을 기반으로 제작되었습니다.\nCopyright © 2026 FizzyHedgehog. All rights reserved.</string>
+
+    <!-- 페이지 분할 설정 -->
+    <string name="split_mode_label">PDF 페이지 분할 모드</string>
+    <string name="split_mode_none">기본 (분할 없음)</string>
+    <string name="split_mode_portrait">A4 세로 분할</string>
+    <string name="split_mode_landscape">A4 가로 분할</string>
+    <string name="auto_split_label">지능형 자동 페이지 분할</string>
+    <string name="auto_split_sublabel">노트 여백과 획 위치를 분석하여 페이지를 자연스럽게 분할합니다.</string>
+
+    <!-- 저장 위치 설정 -->
+    <string name="section_storage">저장 및 파일 관리</string>
+    <string name="auto_save_label">변환 완료 시 자동으로 지정 위치에 저장</string>
+    <string name="auto_save_sublabel">비활성화 시 앱 내 임시 보관되며, [저장] 버튼 클릭 시 원하는 폴더를 선택할 수 있습니다.</string>
+    <string name="save_folder_label">항상 저장할 기본 폴더</string>
+    <string name="save_folder_source_priority">원본 파일 폴더 우선 (가져온 위치)</string>
+    <string name="btn_select_save_folder">폴더 지정</string>
+    <string name="btn_reset_save_folder">기본값 복원</string>
+
+    <!-- 알림 설정 -->
+    <string name="section_notification">알림</string>
+    <string name="notify_label">변환 완료 시 시스템 알림 받기</string>
+    <string name="notify_sublabel">변환 작업이 완료되면 상단 알림바로 알려줍니다.</string>
+    <string name="notification_channel_name">변환 완료 알림</string>
+    <string name="notification_single_body">\'%1$s\' 변환이 성공적으로 완료되었습니다.</string>
+    <string name="notification_multi_body">총 %1$d개 파일의 PDF 변환이 완료되었습니다.</string>
+
+    <!-- 중복 파일 알림 -->
+    <string name="file_already_completed">이미 변환이 완료된 파일입니다: %1$s</string>
+    <string name="file_already_queued">이미 대기열에 추가된 파일입니다: %1$s</string>
 </resources>

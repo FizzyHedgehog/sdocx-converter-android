@@ -43,7 +43,8 @@ fun MainScreen(
     onSelectFilesClick: () -> Unit,
     onSelectFolderClick: () -> Unit,
     onSaveSinglePdf: (Uri, String) -> Unit = { _, _ -> },
-    onSaveBatchPdfs: (List<Uri>) -> Unit = {}
+    onSaveBatchPdfs: (List<Uri>) -> Unit = {},
+    onSelectDefaultSaveFolderClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val fileList by viewModel.fileList.collectAsState()
@@ -521,7 +522,8 @@ fun MainScreen(
         SettingsDialog(
             currentSettings = settings,
             onDismiss = { showSettings = false },
-            onSave = { viewModel.updateSettings(it) }
+            onSave = { viewModel.updateSettings(context, it) },
+            onSelectDefaultSaveFolderClick = onSelectDefaultSaveFolderClick
         )
     }
 

@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.documentfile.provider.DocumentFile
 import com.fizzyhedgehog.sdocxconverter.ui.screens.MainScreen
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SDOCXConverterTheme
 
@@ -68,9 +69,49 @@ class MainActivity : ComponentActivity() {
         pendingBatchSourceUris = emptyList()
     }
 
+    private val selectDefaultSaveDirectoryLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { treeUri: Uri? ->
+        if (treeUri != null) {
+            try {
+                contentResolver.takePersistableUriPermission(
+                    treeUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            var folderName = "지정된 폴더"
+            try {
+                val doc = DocumentFile.fromTreeUri(this, treeUri)
+                doc?.name?.let { folderName = it }
+            } catch (_: Exception) {}
+            val current = viewModel.settings.value
+            viewModel.updateSettings(
+                this,
+                current.copy(
+                    defaultSaveTreeUri = treeUri.toString(),
+                    defaultSaveTreeName = folderName
+                )
+            )
+        }
+    }
+
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ -> }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // SharedPreferences 환경설정 로드
+        viewModel.initSettings(this)
+
+        // Android 13+ 알림 권한 확인
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
         // 인텐트로 전달된 .sdocx 파일/폴더 처리 (공유하기 또는 연결 프로그램)
         handleIntent(intent)
@@ -92,6 +133,9 @@ class MainActivity : ComponentActivity() {
                     onSaveBatchPdfs = { uris ->
                         pendingBatchSourceUris = uris
                         exportBatchFolderLauncher.launch(null)
+                    },
+                    onSelectDefaultSaveFolderClick = {
+                        selectDefaultSaveDirectoryLauncher.launch(null)
                     }
                 )
             }
