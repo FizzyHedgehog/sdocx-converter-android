@@ -133,6 +133,14 @@ class ShareHandlerActivity : ComponentActivity() {
         val toastMessage = mutableStateOf<String?>(getString(R.string.toast_background_converting))
         setupToastUi(toastMessage)
 
+        // 1차 '변환 중' 알림은 정확히 500ms(0.5초) 동안만 표시된 후 사라지도록 자동 종료 타이머 설정
+        val dismissConvertingJob = lifecycleScope.launch(Dispatchers.Main) {
+            delay(500)
+            if (toastMessage.value == getString(R.string.toast_background_converting)) {
+                toastMessage.value = null
+            }
+        }
+
         lifecycleScope.launch(Dispatchers.IO) {
             val startTime = System.currentTimeMillis()
             var successCount = 0
@@ -156,11 +164,12 @@ class ShareHandlerActivity : ComponentActivity() {
                 }
             }
 
-            // 사용자 지침: 1차 '변환 중' 알림 정확히 0.5초(500ms) 유지
+            // 변환이 500ms보다 빨리 끝난 경우, 1차 '변환 중' 알림이 500ms 동안은 보이도록 최소 표시 시간 보장
             val elapsed = System.currentTimeMillis() - startTime
             if (elapsed < 500) {
                 delay(500 - elapsed)
             }
+            dismissConvertingJob.cancel()
 
             withContext(Dispatchers.Main) {
                 if (successCount > 0) {
@@ -195,6 +204,14 @@ class ShareHandlerActivity : ComponentActivity() {
         val toastMessage = mutableStateOf<String?>(getString(R.string.toast_background_converting))
         setupToastUi(toastMessage)
 
+        // 1차 '변환 중' 알림은 정확히 500ms(0.5초) 동안만 표시된 후 사라지도록 자동 종료 타이머 설정
+        val dismissConvertingJob = lifecycleScope.launch(Dispatchers.Main) {
+            delay(500)
+            if (toastMessage.value == getString(R.string.toast_background_converting)) {
+                toastMessage.value = null
+            }
+        }
+
         lifecycleScope.launch(Dispatchers.IO) {
             val startTime = System.currentTimeMillis()
             val convertedUris = mutableListOf<Uri>()
@@ -216,15 +233,16 @@ class ShareHandlerActivity : ComponentActivity() {
                 }
             }
 
-            // 사용자 지침: 1차 '변환 중' 알림 정확히 0.5초(500ms) 유지
+            // 변환이 500ms보다 빨리 끝난 경우, 1차 '변환 중' 알림이 500ms 동안은 보이도록 최소 표시 시간 보장
             val elapsed = System.currentTimeMillis() - startTime
             if (elapsed < 500) {
                 delay(500 - elapsed)
             }
+            dismissConvertingJob.cancel()
 
             withContext(Dispatchers.Main) {
+                toastMessage.value = null
                 if (convertedUris.isNotEmpty()) {
-                    toastMessage.value = null
                     if (convertedUris.size == 1) {
                         val singleUri = convertedUris[0]
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
