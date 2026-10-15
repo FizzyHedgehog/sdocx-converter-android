@@ -154,13 +154,14 @@ def process_and_send_apk(run_id):
         )
 
         if notify_telegram:
-            print("Sending message to Telegram...")
-            notify_telegram.send_telegram_message(msg)
+            print("Sending message to Telegram (Android channel)...")
+            notify_telegram.send_telegram_message(msg, platform="android")
 
-            print("Sending APK file to Telegram...")
+            print("Sending APK file to Telegram (Android channel)...")
             doc_sent = notify_telegram.send_telegram_document(
                 final_apk,
-                caption="📱 SDOCX Converter (백그라운드 공유 테스트 APK)"
+                caption="📱 SDOCX Converter (백그라운드 공유 테스트 APK)",
+                platform="android"
             )
             print(f"Telegram document send result: {doc_sent}")
 
