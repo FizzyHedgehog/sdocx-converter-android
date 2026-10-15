@@ -316,6 +316,70 @@ class ConverterViewModel : ViewModel() {
         }
     }
 
+    fun exportBatchPdfsToDownloads(sourceUris: List<Uri>, context: Context, subFolder: String = "SDOCX_PDF") {
+        viewModelScope.launch(Dispatchers.IO) {
+            val resolver = context.contentResolver
+            var savedCount = 0
+            val savedUris = mutableSetOf<Uri>()
+
+            for (srcUri in sourceUris) {
+                val item = _fileList.value.find { it.outputPdfUri == srcUri }
+                val fileName = item?.outputPdfName ?: (item?.name?.substringBeforeLast(".")?.plus(".pdf") ?: "document.pdf")
+
+                try {
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            val relPath = if (subFolder.isEmpty()) {
+                                Environment.DIRECTORY_DOWNLOADS
+                            } else {
+                                "${Environment.DIRECTORY_DOWNLOADS}/$subFolder"
+                            }
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, relPath)
+                            put(MediaStore.MediaColumns.IS_PENDING, 1)
+                        }
+                    }
+
+                    val targetUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                    if (targetUri != null) {
+                        resolver.openOutputStream(targetUri)?.use { out ->
+                            resolver.openInputStream(srcUri)?.use { inp ->
+                                inp.copyTo(out)
+                            }
+                        }
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            contentValues.clear()
+                            contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                            resolver.update(targetUri, contentValues, null, null)
+                        }
+
+                        savedCount++
+                        savedUris.add(srcUri)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                if (savedCount > 0) {
+                    _fileList.value = _fileList.value.map {
+                        if (it.outputPdfUri in savedUris) it.copy(isSavedToDevice = true) else it
+                    }
+                    Toast.makeText(
+                        context,
+                        "${savedCount}개 파일이 다운로드(SDOCX_PDF) 폴더에 저장되었습니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(context, context.getString(R.string.save_error), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     fun removeFile(id: String) {
         _fileList.value = _fileList.value.filter { it.id != id }
     }

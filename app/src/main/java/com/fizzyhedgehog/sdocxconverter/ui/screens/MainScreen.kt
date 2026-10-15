@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.fizzyhedgehog.sdocxconverter.ConversionStatus
 import com.fizzyhedgehog.sdocxconverter.ConverterViewModel
 import com.fizzyhedgehog.sdocxconverter.R
+import com.fizzyhedgehog.sdocxconverter.ui.components.BatchSaveDialog
 import com.fizzyhedgehog.sdocxconverter.ui.components.ConvertedPdfCard
 import com.fizzyhedgehog.sdocxconverter.ui.components.DropZone
 import com.fizzyhedgehog.sdocxconverter.ui.components.QueueFileCard
@@ -51,6 +52,7 @@ fun MainScreen(
     val isConverting by viewModel.isConverting.collectAsState()
     val settings by viewModel.settings.collectAsState()
     var showSettings by remember { mutableStateOf(false) }
+    var showBatchSaveDialog by remember { mutableStateOf(false) }
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
 
@@ -349,8 +351,7 @@ fun MainScreen(
                             ) {
                                 FilledTonalButton(
                                     onClick = {
-                                        val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                        if (uris.isNotEmpty()) onSaveBatchPdfs(uris)
+                                        showBatchSaveDialog = true
                                     },
                                     enabled = selectedIds.isNotEmpty(),
                                     modifier = Modifier.weight(1f),
@@ -617,8 +618,7 @@ fun MainScreen(
                                 ) {
                                     FilledTonalButton(
                                         onClick = {
-                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                            if (uris.isNotEmpty()) onSaveBatchPdfs(uris)
+                                            showBatchSaveDialog = true
                                         },
                                         enabled = selectedIds.isNotEmpty(),
                                         modifier = Modifier.weight(1f),
@@ -690,6 +690,36 @@ fun MainScreen(
             onDismiss = { showSettings = false },
             onSave = { viewModel.updateSettings(context, it) },
             onSelectDefaultSaveFolderClick = onSelectDefaultSaveFolderClick
+        )
+    }
+
+    if (showBatchSaveDialog) {
+        val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+        BatchSaveDialog(
+            selectedCount = uris.size,
+            onDismiss = { showBatchSaveDialog = false },
+            onSaveToDownloads = {
+                showBatchSaveDialog = false
+                viewModel.exportBatchPdfsToDownloads(uris, context)
+                isSelectionMode = false
+                selectedIds = emptySet()
+            },
+            onSaveToCustomFolder = {
+                showBatchSaveDialog = false
+                onSaveBatchPdfs(uris)
+                isSelectionMode = false
+                selectedIds = emptySet()
+            },
+            defaultSaveTreeName = settings.defaultSaveTreeName,
+            onSaveToDefaultFolder = if (settings.defaultSaveTreeUri != null) {
+                {
+                    showBatchSaveDialog = false
+                    val targetTree = Uri.parse(settings.defaultSaveTreeUri)
+                    viewModel.exportBatchPdfsToFolder(uris, targetTree, context)
+                    isSelectionMode = false
+                    selectedIds = emptySet()
+                }
+            } else null
         )
     }
 }

@@ -132,7 +132,10 @@ class MainActivity : ComponentActivity() {
                     },
                     onSaveBatchPdfs = { uris ->
                         pendingBatchSourceUris = uris
-                        exportBatchFolderLauncher.launch(null)
+                        val initialUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADocuments")
+                        } else null
+                        exportBatchFolderLauncher.launch(initialUri)
                     },
                     onSelectDefaultSaveFolderClick = {
                         selectDefaultSaveDirectoryLauncher.launch(null)
