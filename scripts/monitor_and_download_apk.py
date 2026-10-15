@@ -138,30 +138,47 @@ def process_and_send_apk(run_id):
         size_mb = os.path.getsize(final_apk) / (1024 * 1024)
         print(f"🎉 APK successfully extracted: {final_apk} ({size_mb:.2f} MB)")
 
-        msg = (
-            "🚀 <b>[SDOCX Converter GitHub 인앱 자동 업데이트 탑재 빌드]</b>\n\n"
-            "요청해 주신 <b>GitHub 기반 인앱 자동 업데이트(Self-Updater)</b> 기능이 완벽하게 구현된 최신 테스트 APK입니다!\n"
-            "(※ 깃허브 공개 릴리즈나 메인 페이지는 전혀 건드리지 않고 독립 브랜치에서 안전하게 빌드되었습니다.)\n\n"
-            "🔍 <b>새로 추가된 인앱 업데이트 기능:</b>\n"
-            "1. <b>설정 창 [업데이트 확인] 버튼</b>:\n"
-            "   • 설정 다이얼로그 하단에서 현재 앱 버전 확인 및 [업데이트 확인] 버튼 제공\n"
-            "   • 터치 시 GitHub Releases 최신 버전을 실시간으로 조회하여 안내\n\n"
-            "2. <b>새 버전 감지 및 변경 내역(Changelog) 팝업</b>:\n"
-            "   • 앱 실행 시 또는 수동 확인 시 새 버전이 있으면 팝업으로 변경 내역과 함께 [지금 업데이트] 제공\n\n"
-            "3. <b>원터치 다운로드 & 자동 패키지 설치기 연동</b>:\n"
-            "   • [지금 업데이트] 터치 시 다운로드 진행률(%) 표시 후, 안드로이드 시스템 패키지 설치 창이 즉시 실행되어 원터치로 갱신 완료!\n\n"
-            f"• 파일명: <code>SDOCX_Converter.apk</code> ({size_mb:.2f} MB)\n\n"
-            "아래 첨부된 APK로 업데이트하여 기기에서 테스트해 보세요!"
+        full_msg = (
+            "🛠️ <b>[SDOCX Converter 갤럭시 스타일 개발자 모드 탑재 빌드]</b>\n\n"
+            "요청하신 <b>갤럭시 One UI 동일 7회 클릭 이스터에그 및 PIN(3208) 잠금</b>, 그리고 <b>비공개 사전 출시(Pre-release) 채널</b> 연동이 모두 적용되었습니다.\n\n"
+            "🔍 <b>구현 및 동작 상세:</b>\n\n"
+            "1. <b>갤럭시 One UI 동일 7회 클릭 카운트다운</b>\n"
+            "   • [설정] > [버전 정보] 영역을 연속으로 터치합니다.\n"
+            "   • 1~3회: 무반응 (갤럭시 One UI 정책 동일)\n"
+            "   • 4회 터치 시: <i>\'개발자 모드를 켜려면 3번 더 누르세요\'</i> (3단계 남음)\n"
+            "   • 5회 터치 시: <i>\'개발자 모드를 켜려면 2번 더 누르세요\'</i> (2단계 남음)\n"
+            "   • 6회 터치 시: <i>\'개발자 모드를 켜려면 1번 더 누르세요\'</i> (1단계 남음)\n"
+            "   • 7회 터치 시: 즉시 <b>PIN 번호 입력 다이얼로그</b> 팝업\n"
+            "   • 이미 켜진 상태에서 터치 시: <i>\'개발자 모드가 이미 켜져 있습니다.\'</i>\n\n"
+            "2. <b>지정 보안 PIN(3208) 잠금</b>\n"
+            "   • 팝업창에 <b>3208</b> 입력 후 확인 시 <i>\'개발자 모드를 켰습니다.\'</i> 토스트와 함께 활성화\n"
+            "   • 오입력 시 오류 안내 표시 및 재입력 유도\n\n"
+            "3. <b>[개발자 옵션] 신규 설정 메뉴</b>\n"
+            "   • <b>개발자 옵션 마스터 스위치</b>: 끄면 즉시 메뉴가 숨겨지고 원복\n"
+            "   • <b>사전 출시(Pre-release) 채널</b> (기본 ON): 일반 사용자(releases/latest)에게는 안 보이고 비공개로 올린 Pre-release 버전만 내 기기에서 감지\n"
+            "   • <b>동일 버전 재설치 허용 (Bypass Version Check)</b>: 버전이 같아도 강제로 최신 APK를 다운로드/설치 테스트 가능\n"
+            "   • <b>[업데이트 화면 시뮬레이션] 버튼</b>: 실제 릴리즈 배포 전에도 업데이트 팝업 및 다운로드 UI를 즉시 테스트 가능\n\n"
+            f"• 빌드 파일명: <code>SDOCX_Converter.apk</code> ({size_mb:.2f} MB)"
+        )
+        summary_msg = (
+            "1. 갤럭시 One UI와 동일하게 버전 7회 탭 시 3회 남았을 때부터 카운트다운 토스트가 뜨며 PIN(3208) 입력창이 열립니다.\n"
+            "2. 잠금 해제 시 [개발자 옵션]이 열려 일반 사용자에게 노출되지 않는 GitHub Pre-release 채널 및 시뮬레이션 기능을 자유롭게 사용하실 수 있습니다.\n"
+            "3. 아래 첨부된 APK를 갤탭에 설치하여 바로 테스트해 보실 수 있습니다."
         )
 
         if notify_telegram:
             print("Sending message to Telegram (Android channel)...")
-            notify_telegram.send_telegram_message(msg, platform="android")
+            notify_telegram.send_full_and_summary(
+                full_content=full_msg,
+                summary_content=summary_msg,
+                platform="android",
+                reply_to_message_id=299
+            )
 
             print("Sending APK file to Telegram (Android channel)...")
             doc_sent = notify_telegram.send_telegram_document(
                 final_apk,
-                caption="📱 SDOCX Converter (백그라운드 공유 테스트 APK)",
+                caption="📱 SDOCX Converter (개발자 모드 & Pre-release 채널 지원 APK)",
                 platform="android"
             )
             print(f"Telegram document send result: {doc_sent}")
