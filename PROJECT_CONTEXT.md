@@ -25,13 +25,17 @@
 1. **NO Local MacBook Downloads**:
    - **NEVER** save or download generated `.apk` files to the MacBook's `~/Desktop` or personal user storage.
    - All automated build scripts (`monitor_and_download_apk.py`) extract APKs strictly to `/tmp/sdocx_apk_build/`, send them to Telegram, and immediately delete all local files from the MacBook.
-2. **Hidden Feature Branch & Release Isolation**:
+2. **Direct Telegram Delivery & Full/Summary Reporting**:
+   - Build artifacts must be delivered directly to the user's Telegram chat/topic using `notify_telegram.send_telegram_document`.
+   - Detailed task reports must always include both full content and a 3-line core summary via `notify_telegram.send_full_and_summary`.
+3. **Hidden Feature Branch & Release Isolation**:
    - When developing or testing new features, work strictly on isolated feature branches (e.g. `feature/background-share`).
    - Do NOT overwrite public Release v1.0.0 or `main` until the user explicitly tests and approves ("정식 배포해" / "올려줘").
-3. **English Code & Commits**:
+4. **English Code & Commits**:
    - All code comments, Git commit messages, and documentation must be written in clear English without emojis.
-4. **Preserve User Privacy**:
+5. **Preserve User Privacy & Terminal Silence**:
    - Keep GitHub profile anonymous (`FizzyHedgehog`).
+   - Terminal silence principle: never use audible commands (`afplay`, `say`).
 
 ---
 
@@ -85,4 +89,5 @@
     You **MUST execute the listener as a background task**:
     `run_command(CommandLine="python3 /Users/kyungmolee01/.sdocx_telegram_agent/wait_for_telegram_android.py", Cwd="/Users/kyungmolee01/Projects/sdocx-converter-android", WaitMsBeforeAsync=1000)`
     Do NOT simply reply "대기하겠습니다" with plain text. Always launch the background listener so you wake up reactively when a command arrives from the Android Telegram group!
+  - Always respond to Telegram messages using `notify_telegram.send_full_and_summary(full_content, summary_content, platform="android", reply_to_message_id=...)` to provide both full details and a concise 3-line summary.
 
