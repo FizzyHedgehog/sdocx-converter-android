@@ -8,6 +8,7 @@ import android.provider.Settings
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -26,15 +27,16 @@ data class UpdateInfo(
 object UpdateManager {
 
     private const val GITHUB_REPO = "FizzyHedgehog/sdocx-converter-android"
-    private const val API_URL = "https://api.github.com/repos/$GITHUB_REPO/releases/latest"
+    private const val API_URL_LATEST = "https://api.github.com/repos/$GITHUB_REPO/releases/latest"
+    private const val API_URL_RELEASES = "https://api.github.com/repos/$GITHUB_REPO/releases"
 
     /**
      * Compare semantic versions (e.g. "1.1.0" > "1.0.0").
      * Returns true if latestVersion is strictly newer than currentVersion.
      */
     fun isNewerVersion(latestTag: String, currentVersion: String): Boolean {
-        val cleanLatest = latestTag.trim().removePrefix("v").removePrefix("V")
-        val cleanCurrent = currentVersion.trim().removePrefix("v").removePrefix("V")
+        val cleanLatest = latestTag.trim().removePrefix("v").removePrefix("V").substringBefore("-")
+        val cleanCurrent = currentVersion.trim().removePrefix("v").removePrefix("V").substringBefore("-")
 
         val latestParts = cleanLatest.split(".").mapNotNull { it.toIntOrNull() }
         val currentParts = cleanCurrent.split(".").mapNotNull { it.toIntOrNull() }
@@ -50,11 +52,21 @@ object UpdateManager {
     }
 
     /**
-     * Query GitHub Releases API for the latest release and compare with current app version.
+     * Query GitHub Releases API for updates. Supports stable and pre-release channels.
      */
-    suspend fun checkUpdate(context: Context): Result<UpdateInfo> = withContext(Dispatchers.IO) {
+    suspend fun checkUpdate(
+        context: Context,
+        includePrerelease: Boolean? = null,
+        bypassVersionCheck: Boolean? = null
+    ): Result<UpdateInfo> = withContext(Dispatchers.IO) {
         try {
-            val url = URL(API_URL)
+            val prefs = context.getSharedPreferences(ConversionHelper.PREFS_NAME, Context.MODE_PRIVATE)
+            val isDev = prefs.getBoolean("developer_mode_enabled", false)
+            val usePrerelease = includePrerelease ?: (isDev && prefs.getBoolean("dev_prerelease_channel", true))
+            val bypass = bypassVersionCheck ?: (isDev && prefs.getBoolean("dev_bypass_version_check", false))
+
+            val targetApiUrl = if (usePrerelease) API_URL_RELEASES else API_URL_LATEST
+            val url = URL(targetApiUrl)
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = 10000
@@ -68,12 +80,42 @@ object UpdateManager {
             }
 
             val responseText = conn.inputStream.bufferedReader().use { it.readText() }
-            val json = JSONObject(responseText)
-            val tagName = json.optString("tag_name", "")
-            val title = json.optString("name", tagName)
-            val body = json.optString("body", "")
 
-            val assets = json.optJSONArray("assets")
+            val targetRelease = if (usePrerelease) {
+                val releasesArray = JSONArray(responseText)
+                var found: JSONObject? = null
+                for (i in 0 until releasesArray.length()) {
+                    val rel = releasesArray.getJSONObject(i)
+                    if (rel.optBoolean("draft", false)) continue
+                    val assets = rel.optJSONArray("assets") ?: continue
+                    var hasApk = false
+                    for (j in 0 until assets.length()) {
+                        if (assets.getJSONObject(j).optString("name", "").endsWith(".apk", ignoreCase = true)) {
+                            hasApk = true
+                            break
+                        }
+                    }
+                    if (hasApk) {
+                        found = rel
+                        break
+                    }
+                }
+                found ?: if (releasesArray.length() > 0) releasesArray.getJSONObject(0) else return@withContext Result.failure(Exception("No releases found"))
+            } else {
+                JSONObject(responseText)
+            }
+
+            val tagName = targetRelease.optString("tag_name", "")
+            val isPrerelease = targetRelease.optBoolean("prerelease", false)
+            val rawTitle = targetRelease.optString("name", tagName)
+            val title = if (isPrerelease && !rawTitle.contains("Pre-release", ignoreCase = true)) {
+                "[Pre-release] $rawTitle"
+            } else {
+                rawTitle
+            }
+            val body = targetRelease.optString("body", "")
+
+            val assets = targetRelease.optJSONArray("assets")
             var apkUrl: String? = null
             var apkSize = 0L
             if (assets != null) {
@@ -94,7 +136,7 @@ object UpdateManager {
                 null
             }
             val currentVersion = pInfo?.versionName ?: "1.0.0"
-            val hasUpdate = isNewerVersion(tagName, currentVersion) && !apkUrl.isNullOrEmpty()
+            val hasUpdate = (!apkUrl.isNullOrEmpty()) && (bypass || isNewerVersion(tagName, currentVersion))
 
             Result.success(
                 UpdateInfo(

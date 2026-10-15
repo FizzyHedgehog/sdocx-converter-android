@@ -21,7 +21,7 @@ import java.util.UUID
 
 object ConversionHelper {
 
-    private const val PREFS_NAME = "sdocx_converter_prefs"
+    const val PREFS_NAME = "sdocx_converter_prefs"
     private const val NOTIFICATION_CHANNEL_ID = "sdocx_conversion_channel"
 
     data class ConversionResult(

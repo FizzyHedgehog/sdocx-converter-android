@@ -154,4 +154,23 @@
     <string name="downloading_update">업데이트 다운로드 중…</string>
     <string name="download_failed">업데이트 다운로드 실패: %1$s</string>
     <string name="changelog_title">주요 변경 사항</string>
+
+    <!-- 개발자 모드 및 비공개 테스트 -->
+    <string name="toast_dev_remaining">개발자 모드를 켜려면 %1$d번 더 누르세요</string>
+    <string name="toast_dev_enabled">개발자 모드를 켰습니다.</string>
+    <string name="toast_dev_already_enabled">개발자 모드가 이미 켜져 있습니다.</string>
+    <string name="toast_dev_disabled">개발자 모드가 꺼졌습니다.</string>
+    <string name="dialog_pin_title">개발자 모드 잠금 해제</string>
+    <string name="dialog_pin_desc">개발자 모드를 활성화하려면 PIN 번호를 입력하세요.</string>
+    <string name="dialog_pin_hint">PIN 번호 (4자리)</string>
+    <string name="dialog_pin_wrong">잘못된 PIN 번호입니다.</string>
+    <string name="section_developer">개발자 옵션</string>
+    <string name="dev_prerelease_label">사전 출시(Pre-release) 채널</string>
+    <string name="dev_prerelease_desc">정식 배포 전 테스트용 Pre-release 버전을 업데이트 대상으로 감지합니다.</string>
+    <string name="dev_bypass_version_label">동일 버전 재설치 허용 (버전 검사 우회)</string>
+    <string name="dev_bypass_version_desc">버전이 같거나 낮아도 최신 릴리즈의 APK를 다운로드하여 재설치할 수 있습니다.</string>
+    <string name="dev_simulate_update_btn">업데이트 화면 시뮬레이션</string>
+    <string name="dev_simulated_version">1.2.0-preview</string>
+    <string name="dev_simulated_title">v1.2.0 사전 테스트 버전 (시뮬레이션)</string>
+    <string name="dev_simulated_notes">• 개발자 모드 전용 인앱 업데이트 시뮬레이션 테스트\n• 삼성 노트 백그라운드 무음 자동 저장 최적화 (1.0초 알림)\n• 갤럭시 태블릿 One UI 테마 통일\n• 펜/형광펜 정밀 굵기 배율 적용</string>
 </resources>

@@ -154,4 +154,23 @@
     <string name="downloading_update">Downloading update…</string>
     <string name="download_failed">Failed to download update: %1$s</string>
     <string name="changelog_title">What\'s New</string>
+
+    <!-- Developer Mode & Testing -->
+    <string name="toast_dev_remaining">You are now %1$d steps away from being a developer.</string>
+    <string name="toast_dev_enabled">Developer mode has been turned on.</string>
+    <string name="toast_dev_already_enabled">Developer mode is already turned on.</string>
+    <string name="toast_dev_disabled">Developer mode has been turned off.</string>
+    <string name="dialog_pin_title">Unlock Developer Options</string>
+    <string name="dialog_pin_desc">Enter PIN to activate Developer Mode.</string>
+    <string name="dialog_pin_hint">PIN (4 digits)</string>
+    <string name="dialog_pin_wrong">Incorrect PIN. Please try again.</string>
+    <string name="section_developer">Developer Options</string>
+    <string name="dev_prerelease_label">Pre-release Channel</string>
+    <string name="dev_prerelease_desc">Detect Pre-release versions on GitHub as updates before public release.</string>
+    <string name="dev_bypass_version_label">Allow Same-Version Reinstall</string>
+    <string name="dev_bypass_version_desc">Allow downloading and reinstalling even when version numbers match.</string>
+    <string name="dev_simulate_update_btn">Simulate Update Dialog</string>
+    <string name="dev_simulated_version">1.2.0-preview</string>
+    <string name="dev_simulated_title">v1.2.0 Preview Release (Simulated)</string>
+    <string name="dev_simulated_notes">• Simulated update dialog test for Developer Mode\n• Background silent conversion improvements\n• S-Pen fine calibration settings</string>
 </resources>

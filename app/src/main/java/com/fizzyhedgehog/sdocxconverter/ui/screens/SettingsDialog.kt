@@ -6,10 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,7 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.fizzyhedgehog.sdocxconverter.ConversionHelper
 import com.fizzyhedgehog.sdocxconverter.ConverterSettings
 import com.fizzyhedgehog.sdocxconverter.R
 import com.fizzyhedgehog.sdocxconverter.ShareReceiveAction
@@ -61,6 +69,24 @@ fun SettingsDialog(
     var downloadProgress by remember { mutableStateOf(0f) }
     var downloadedBytes by remember { mutableStateOf(0L) }
     var totalBytes by remember { mutableStateOf(0L) }
+
+    val prefs = remember(context) {
+        context.getSharedPreferences(ConversionHelper.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+    }
+    var developerModeEnabled by remember {
+        mutableStateOf(prefs.getBoolean("developer_mode_enabled", false))
+    }
+    var devPrereleaseChannel by remember {
+        mutableStateOf(prefs.getBoolean("dev_prerelease_channel", true))
+    }
+    var devBypassVersionCheck by remember {
+        mutableStateOf(prefs.getBoolean("dev_bypass_version_check", false))
+    }
+
+    var devTapCount by remember { mutableIntStateOf(0) }
+    var lastDevTapTime by remember { mutableLongStateOf(0L) }
+    var showPinDialog by remember { mutableStateOf(false) }
+    var currentDevToast by remember { mutableStateOf<Toast?>(null) }
 
     // 외부에서 defaultSaveTreeUri가 갱신되면 동기화
     LaunchedEffect(currentSettings.defaultSaveTreeUri, currentSettings.defaultSaveTreeName) {
@@ -415,7 +441,44 @@ fun SettingsDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                if (developerModeEnabled) {
+                                    currentDevToast?.cancel()
+                                    currentDevToast = Toast.makeText(
+                                        context,
+                                        context.getString(R.string.toast_dev_already_enabled),
+                                        Toast.LENGTH_SHORT
+                                    ).also { it.show() }
+                                    return@clickable
+                                }
+
+                                val now = System.currentTimeMillis()
+                                if (now - lastDevTapTime > 3000L) {
+                                    devTapCount = 0
+                                }
+                                lastDevTapTime = now
+                                devTapCount++
+
+                                val remaining = 7 - devTapCount
+                                if (remaining in 1..3) {
+                                    currentDevToast?.cancel()
+                                    currentDevToast = Toast.makeText(
+                                        context,
+                                        context.getString(R.string.toast_dev_remaining, remaining),
+                                        Toast.LENGTH_SHORT
+                                    ).also { it.show() }
+                                } else if (remaining <= 0) {
+                                    devTapCount = 0
+                                    currentDevToast?.cancel()
+                                    showPinDialog = true
+                                }
+                            }
+                            .padding(vertical = 4.dp, horizontal = 2.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.app_version_label, appVersionName),
                             style = MaterialTheme.typography.bodyMedium,
@@ -484,6 +547,140 @@ fun SettingsDialog(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
+                    }
+                }
+
+                if (developerModeEnabled) {
+                    Spacer(modifier = Modifier.height(18.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 7. 개발자 옵션
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Rounded.Code,
+                                contentDescription = null,
+                                tint = SamsungOrange,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.section_developer),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = SamsungOrange
+                            )
+                        }
+                        Switch(
+                            checked = developerModeEnabled,
+                            onCheckedChange = { isEnabled ->
+                                developerModeEnabled = isEnabled
+                                prefs.edit().putBoolean("developer_mode_enabled", isEnabled).apply()
+                                if (!isEnabled) {
+                                    Toast.makeText(context, context.getString(R.string.toast_dev_disabled), Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = SamsungOrange,
+                                checkedTrackColor = SamsungOrange.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Pre-release 채널 스위치
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.dev_prerelease_label),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = stringResource(R.string.dev_prerelease_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Switch(
+                            checked = devPrereleaseChannel,
+                            onCheckedChange = { checked ->
+                                devPrereleaseChannel = checked
+                                prefs.edit().putBoolean("dev_prerelease_channel", checked).apply()
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = SamsungOrange,
+                                checkedTrackColor = SamsungOrange.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 동일 버전 재설치 허용 (Bypass Version Check)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.dev_bypass_version_label),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = stringResource(R.string.dev_bypass_version_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Switch(
+                            checked = devBypassVersionCheck,
+                            onCheckedChange = { checked ->
+                                devBypassVersionCheck = checked
+                                prefs.edit().putBoolean("dev_bypass_version_check", checked).apply()
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = SamsungOrange,
+                                checkedTrackColor = SamsungOrange.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 강제 업데이트 시뮬레이션 버튼
+                    OutlinedButton(
+                        onClick = {
+                            availableUpdate = UpdateInfo(
+                                hasUpdate = true,
+                                latestVersion = context.getString(R.string.dev_simulated_version),
+                                currentVersion = appVersionName,
+                                releaseTitle = context.getString(R.string.dev_simulated_title),
+                                releaseNotes = context.getString(R.string.dev_simulated_notes),
+                                apkDownloadUrl = "https://github.com/FizzyHedgehog/sdocx-converter-android/releases/download/v1.0.0/SDOCX_Converter.apk",
+                                apkSize = 3894720L
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.dev_simulate_update_btn), style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -559,6 +756,95 @@ fun SettingsDialog(
             progress = downloadProgress,
             downloadedBytes = downloadedBytes,
             totalBytes = totalBytes
+        )
+    }
+
+    if (showPinDialog) {
+        var pinInput by remember { mutableStateOf("") }
+        var pinError by remember { mutableStateOf(false) }
+
+        AlertDialog(
+            onDismissRequest = { showPinDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.dialog_pin_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.dialog_pin_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = pinInput,
+                        onValueChange = {
+                            if (it.length <= 4) {
+                                pinInput = it
+                                pinError = false
+                            }
+                        },
+                        label = { Text(stringResource(R.string.dialog_pin_hint)) },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (pinInput == "3208") {
+                                    developerModeEnabled = true
+                                    prefs.edit().putBoolean("developer_mode_enabled", true).apply()
+                                    showPinDialog = false
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.toast_dev_enabled),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    pinError = true
+                                }
+                            }
+                        ),
+                        isError = pinError,
+                        supportingText = if (pinError) {
+                            { Text(stringResource(R.string.dialog_pin_wrong), color = MaterialTheme.colorScheme.error) }
+                        } else null,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (pinInput == "3208") {
+                            developerModeEnabled = true
+                            prefs.edit().putBoolean("developer_mode_enabled", true).apply()
+                            showPinDialog = false
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.toast_dev_enabled),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            pinError = true
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SamsungOrange)
+                ) {
+                    Text(stringResource(R.string.btn_ok), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPinDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
         )
     }
 }
