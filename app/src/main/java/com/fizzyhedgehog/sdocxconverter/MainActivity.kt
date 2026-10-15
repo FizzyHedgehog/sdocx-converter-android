@@ -138,7 +138,10 @@ class MainActivity : ComponentActivity() {
                         exportBatchFolderLauncher.launch(initialUri)
                     },
                     onSelectDefaultSaveFolderClick = {
-                        selectDefaultSaveDirectoryLauncher.launch(null)
+                        val initialUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADocuments")
+                        } else null
+                        selectDefaultSaveDirectoryLauncher.launch(initialUri)
                     }
                 )
             }

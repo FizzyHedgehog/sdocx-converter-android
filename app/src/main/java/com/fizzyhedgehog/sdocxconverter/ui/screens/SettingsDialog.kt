@@ -6,7 +6,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -221,14 +223,37 @@ fun SettingsDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
-                            val currentFolderText = defaultSaveTreeName ?: stringResource(R.string.save_folder_source_priority)
+                            val currentFolderText = if (defaultSaveTreeUri != null) {
+                                "📂 ${defaultSaveTreeName ?: "지정된 폴더"}"
+                            } else {
+                                "📥 다운로드 폴더 (내 파일 > 다운로드)"
+                            }
                             Text(
                                 text = currentFolderText,
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.Bold,
+                                color = if (defaultSaveTreeUri != null) MaterialTheme.colorScheme.onSurface else SamsungOrange
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(
+                                    onClick = {
+                                        defaultSaveTreeUri = null
+                                        defaultSaveTreeName = null
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = if (defaultSaveTreeUri == null) {
+                                        ButtonDefaults.buttonColors(containerColor = SamsungOrange)
+                                    } else {
+                                        ButtonDefaults.filledTonalButtonColors()
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("다운로드 폴더 (기본값)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                }
+
                                 OutlinedButton(
                                     onClick = onSelectDefaultSaveFolderClick,
                                     shape = RoundedCornerShape(8.dp),
@@ -236,18 +261,32 @@ fun SettingsDialog(
                                 ) {
                                     Icon(Icons.Rounded.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(stringResource(R.string.btn_select_save_folder), style = MaterialTheme.typography.labelSmall)
+                                    Text("다른 폴더 지정…", style = MaterialTheme.typography.labelSmall)
                                 }
-                                if (defaultSaveTreeUri != null) {
-                                    TextButton(
-                                        onClick = {
-                                            defaultSaveTreeUri = null
-                                            defaultSaveTreeName = null
-                                        },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                                    ) {
-                                        Text(stringResource(R.string.btn_reset_save_folder), style = MaterialTheme.typography.labelSmall)
-                                    }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(8.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Info,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(14.dp).padding(top = 1.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "안드로이드 보안 정책상 시스템 탐색기에서는 다운로드 최상위 폴더 선택이 차단되므로, 다운로드 폴더 저장을 원하시면 [다운로드 폴더 (기본값)]을 선택해 주세요.",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
