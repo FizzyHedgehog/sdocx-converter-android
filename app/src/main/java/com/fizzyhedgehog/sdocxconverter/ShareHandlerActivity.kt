@@ -5,10 +5,29 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -40,12 +59,12 @@ class ShareHandlerActivity : ComponentActivity() {
             }
 
             ShareReceiveAction.AUTO_SAVE -> {
-                // 모드 A: 무음 백그라운드 자동 저장
+                // 모드 A: 무음 백그라운드 자동 저장 (0.5초 정밀 알림)
                 handleSilentAutoSave(targetUris, settings)
             }
 
             ShareReceiveAction.RE_SHARE -> {
-                // 모드 B: 백그라운드 변환 후 즉시 시스템 PDF 공유창 팝업
+                // 모드 B: 백그라운드 변환 후 즉시 시스템 PDF 공유창 팝업 (0.5초 정밀 알림)
                 handleInstantReShare(targetUris, settings)
             }
         }
@@ -77,10 +96,45 @@ class ShareHandlerActivity : ComponentActivity() {
         }
     }
 
+    private fun setupToastUi(messageState: MutableState<String?>) {
+        setContent {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 64.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                val msg = messageState.value
+                AnimatedVisibility(
+                    visible = msg != null,
+                    enter = fadeIn(animationSpec = tween(100)),
+                    exit = fadeOut(animationSpec = tween(100))
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(22.dp),
+                        color = Color(0xDD232427),
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    ) {
+                        Text(
+                            text = msg.orEmpty(),
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun handleSilentAutoSave(uris: List<Uri>, settings: ConverterSettings) {
-        Toast.makeText(this, getString(R.string.toast_background_converting), Toast.LENGTH_SHORT).show()
+        val toastMessage = mutableStateOf<String?>(getString(R.string.toast_background_converting))
+        setupToastUi(toastMessage)
 
         lifecycleScope.launch(Dispatchers.IO) {
+            val startTime = System.currentTimeMillis()
             var successCount = 0
             var lastName: String? = null
             var lastError: String? = null
@@ -102,6 +156,12 @@ class ShareHandlerActivity : ComponentActivity() {
                 }
             }
 
+            // 사용자 지침: 1차 '변환 중' 알림 정확히 0.5초(500ms) 유지
+            val elapsed = System.currentTimeMillis() - startTime
+            if (elapsed < 500) {
+                delay(500 - elapsed)
+            }
+
             withContext(Dispatchers.Main) {
                 if (successCount > 0) {
                     val msg = if (successCount == 1 && lastName != null) {
@@ -109,18 +169,22 @@ class ShareHandlerActivity : ComponentActivity() {
                     } else {
                         getString(R.string.toast_background_save_multi_complete, successCount)
                     }
-                    Toast.makeText(this@ShareHandlerActivity, msg, Toast.LENGTH_LONG).show()
+                    toastMessage.value = msg
 
                     if (settings.notifyOnCompletion) {
                         ConversionHelper.sendCompletionNotification(this@ShareHandlerActivity, successCount, lastName)
                     }
+
+                    // 사용자 지침: 2차 '저장 완료' 알림 정확히 0.5초(500ms) 유지 후 종료
+                    delay(500)
+                    toastMessage.value = null
+                    delay(100)
                 } else {
                     val errMsg = lastError ?: getString(R.string.status_error)
-                    Toast.makeText(
-                        this@ShareHandlerActivity,
-                        getString(R.string.toast_background_convert_error, errMsg),
-                        Toast.LENGTH_LONG
-                    ).show()
+                    toastMessage.value = getString(R.string.toast_background_convert_error, errMsg)
+                    delay(500)
+                    toastMessage.value = null
+                    delay(100)
                 }
                 finish()
             }
@@ -128,9 +192,11 @@ class ShareHandlerActivity : ComponentActivity() {
     }
 
     private fun handleInstantReShare(uris: List<Uri>, settings: ConverterSettings) {
-        Toast.makeText(this, getString(R.string.toast_background_converting), Toast.LENGTH_SHORT).show()
+        val toastMessage = mutableStateOf<String?>(getString(R.string.toast_background_converting))
+        setupToastUi(toastMessage)
 
         lifecycleScope.launch(Dispatchers.IO) {
+            val startTime = System.currentTimeMillis()
             val convertedUris = mutableListOf<Uri>()
             var lastError: String? = null
 
@@ -150,8 +216,15 @@ class ShareHandlerActivity : ComponentActivity() {
                 }
             }
 
+            // 사용자 지침: 1차 '변환 중' 알림 정확히 0.5초(500ms) 유지
+            val elapsed = System.currentTimeMillis() - startTime
+            if (elapsed < 500) {
+                delay(500 - elapsed)
+            }
+
             withContext(Dispatchers.Main) {
                 if (convertedUris.isNotEmpty()) {
+                    toastMessage.value = null
                     if (convertedUris.size == 1) {
                         val singleUri = convertedUris[0]
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -176,11 +249,10 @@ class ShareHandlerActivity : ComponentActivity() {
                     }
                 } else {
                     val errMsg = lastError ?: getString(R.string.status_error)
-                    Toast.makeText(
-                        this@ShareHandlerActivity,
-                        getString(R.string.toast_background_convert_error, errMsg),
-                        Toast.LENGTH_LONG
-                    ).show()
+                    toastMessage.value = getString(R.string.toast_background_convert_error, errMsg)
+                    delay(500)
+                    toastMessage.value = null
+                    delay(100)
                 }
                 finish()
             }
