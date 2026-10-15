@@ -53,19 +53,36 @@ fun openPdf(context: Context, uri: Uri) {
 
 fun openPdfFolder(context: Context) {
     var opened = false
+    val folderPath = "/storage/emulated/0/Download/SDOCX_PDF"
+
+    // 1. 삼성 갤럭시 '내 파일' 전용 인텐트 (갤럭시 탭 최우선 지원)
     try {
-        val intent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS).apply {
+        val samsungIntent = Intent("samsung.myfiles.intent.action.VIEW_PATH").apply {
+            putExtra("samsung.myfiles.intent.extra.START_PATH", folderPath)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        context.startActivity(intent)
+        context.startActivity(samsungIntent)
         opened = true
     } catch (_: Exception) {}
 
+    // 2. SAF 특정 폴더(SDOCX_PDF) 열기
     if (!opened) {
         try {
             val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload%2FSDOCX_PDF")
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "vnd.android.document/directory")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(intent)
+            opened = true
+        } catch (_: Exception) {}
+    }
+
+    // 3. 다운로드 앱 열기
+    if (!opened) {
+        try {
+            val intent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
@@ -73,6 +90,7 @@ fun openPdfFolder(context: Context) {
         } catch (_: Exception) {}
     }
 
+    // 4. 일반 MediaStore 다운로드 URI
     if (!opened) {
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -84,7 +102,7 @@ fun openPdfFolder(context: Context) {
         } catch (_: Exception) {}
     }
 
-    Toast.makeText(context, context.getString(R.string.toast_pdf_folder_hint), Toast.LENGTH_LONG).show()
+    Toast.makeText(context, context.getString(R.string.toast_pdf_folder_hint), Toast.LENGTH_SHORT).show()
 }
 
 fun sharePdf(context: Context, uri: Uri, title: String) {
@@ -97,6 +115,30 @@ fun sharePdf(context: Context, uri: Uri, title: String) {
         context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_title)))
     } catch (e: Exception) {
         Toast.makeText(context, "공유 실패: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun shareMultiplePdfs(context: Context, uris: List<Uri>, title: String = "PDF 파일 일괄 공유") {
+    if (uris.isEmpty()) {
+        Toast.makeText(context, "공유할 파일이 선택되지 않았습니다.", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    if (uris.size == 1) {
+        sharePdf(context, uris.first(), title)
+        return
+    }
+
+    try {
+        val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            type = "application/pdf"
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, title))
+    } catch (e: Exception) {
+        Toast.makeText(context, "다중 공유 실패: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -218,7 +260,7 @@ fun ConvertedPdfCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onOpenPdf() },
+            .clickable { onOpenFolder() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

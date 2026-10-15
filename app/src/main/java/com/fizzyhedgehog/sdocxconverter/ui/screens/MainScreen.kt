@@ -11,6 +11,7 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.PictureAsPdf
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,9 +26,11 @@ import com.fizzyhedgehog.sdocxconverter.ConverterViewModel
 import com.fizzyhedgehog.sdocxconverter.R
 import com.fizzyhedgehog.sdocxconverter.ui.components.ConvertedPdfCard
 import com.fizzyhedgehog.sdocxconverter.ui.components.DropZone
+import com.fizzyhedgehog.sdocxconverter.ui.components.MultiShareDialog
 import com.fizzyhedgehog.sdocxconverter.ui.components.QueueFileCard
 import com.fizzyhedgehog.sdocxconverter.ui.components.openPdf
 import com.fizzyhedgehog.sdocxconverter.ui.components.openPdfFolder
+import com.fizzyhedgehog.sdocxconverter.ui.components.shareMultiplePdfs
 import com.fizzyhedgehog.sdocxconverter.ui.components.sharePdf
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SuccessGreen
@@ -44,6 +47,7 @@ fun MainScreen(
     val isConverting by viewModel.isConverting.collectAsState()
     val settings by viewModel.settings.collectAsState()
     var showSettings by remember { mutableStateOf(false) }
+    var showMultiShareDialog by remember { mutableStateOf(false) }
 
     val pendingItems = fileList.filter { it.status != ConversionStatus.COMPLETED }
     val completedItems = fileList.filter { it.status == ConversionStatus.COMPLETED }
@@ -249,6 +253,27 @@ fun MainScreen(
                         if (completedItems.isNotEmpty()) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 TextButton(
+                                    onClick = { showMultiShareDialog = true },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Share,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = SamsungOrange
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = stringResource(R.string.btn_multi_share),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SamsungOrange
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                TextButton(
                                     onClick = { openPdfFolder(context) },
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
@@ -411,6 +436,24 @@ fun MainScreen(
                             )
                             Row {
                                 TextButton(
+                                    onClick = { showMultiShareDialog = true },
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Share,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = SamsungOrange
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = stringResource(R.string.btn_multi_share),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SamsungOrange
+                                    )
+                                }
+                                TextButton(
                                     onClick = { openPdfFolder(context) },
                                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                 ) {
@@ -464,6 +507,16 @@ fun MainScreen(
             currentSettings = settings,
             onDismiss = { showSettings = false },
             onSave = { viewModel.updateSettings(it) }
+        )
+    }
+
+    if (showMultiShareDialog) {
+        MultiShareDialog(
+            completedItems = completedItems,
+            onDismiss = { showMultiShareDialog = false },
+            onShare = { selectedUris ->
+                shareMultiplePdfs(context, selectedUris)
+            }
         )
     }
 }

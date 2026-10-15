@@ -21,6 +21,11 @@
     <string name="btn_open_pdf">PDF 열기</string>
     <string name="btn_open_folder">폴더 열기</string>
     <string name="btn_share">공유</string>
+    <string name="title_multi_share">PDF 다중 선택 및 공유</string>
+    <string name="btn_multi_share">다중 공유</string>
+    <string name="btn_select_all">전체 선택</string>
+    <string name="btn_deselect_all">선택 해제</string>
+    <string name="share_multi_title">PDF 파일 일괄 공유</string>
     <string name="btn_clear_queue">대기열 비우기</string>
     <string name="btn_clear_completed">완료 목록 비우기</string>
     <string name="btn_all_completed">모든 파일 변환 완료</string>
