@@ -1162,6 +1162,7 @@ checksum = "73f88a1307638156682bada9d7604135552957b7818057dcef22705b4d509495"
 dependencies = [
  "bytemuck",
  "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -1244,6 +1245,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c7c9e0d9b23589f26070720bac724174bfec1083e82f7854cdd0267518343c0"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "oxiarc-core"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "119a925483e4917b645fd77acef86859164e166faa4cce3353c1d7cecfd3665a"
+dependencies = [
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "oxiarc-lz4"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5cccbb2bc13e1654444de7eca50e492f5613629b98a77354936e49f7cc71a32"
+dependencies = [
+ "oxiarc-core",
+]
+
+[[package]]
+name = "oxiarc-zstd"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5dfe82b51b13660b3c44c80706eecf7e477bbce3a2b1509a83631a2ca6b955ce"
+dependencies = [
+ "oxiarc-core",
 ]
 
 [[package]]
@@ -1743,6 +1771,7 @@ dependencies = [
  "crossbeam-utils",
  "getrandom 0.3.4",
  "getrandom 0.4.3",
+ "libc",
  "ndarray",
  "ndarray-rand",
  "num-complex",
@@ -1750,6 +1779,8 @@ dependencies = [
  "num-traits",
  "num_cpus",
  "once_cell",
+ "oxiarc-lz4",
+ "oxiarc-zstd",
  "oxiblas-blas",
  "oxiblas-lapack",
  "oxiblas-ndarray",
@@ -1758,6 +1789,8 @@ dependencies = [
  "rand_chacha 0.10.0",
  "rand_distr 0.6.0",
  "rayon",
+ "serde",
+ "serde_json",
  "thiserror 2.0.21",
  "uuid",
  "wide 1.7.1",
@@ -1839,6 +1872,8 @@ name = "sdocx-jni"
 version = "0.4.0"
 dependencies = [
  "jni",
+ "libc",
+ "scirs2-core",
  "sdocx2pdf",
 ]
 
@@ -1857,11 +1892,13 @@ dependencies = [
  "kahan",
  "krilla",
  "lerp",
+ "libc",
  "log",
  "ndarray",
  "num",
  "once_cell",
  "ordered-float",
+ "scirs2-core",
  "scirs2-interpolate",
  "sdocx",
  "thiserror 2.0.21",
@@ -1895,6 +1932,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.9",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.154"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7e9cc8b1b85264074fbcc02a88680c4096b1e47df8f739dceb03bf482f04bd6"
+dependencies = [
+ "itoa",
+ "memchr",
+ "serde",
+ "serde_core",
+ "zmij",
 ]
 
 [[package]]
@@ -2569,6 +2619,12 @@ name = "zlib-rs"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b268e58e7c693d7c271f93ffc4ba3b380412554231c85bf61ca7af91042a4112"
+
+[[package]]
+name = "zmij"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
 
 [[package]]
 name = "zopfli"
