@@ -26,3 +26,10 @@ ordered-float = "5.3.0"
 log = "0.4"
 indicatif = "0.18"
 krilla = { version = "0.8.2", features = ["pdf"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
