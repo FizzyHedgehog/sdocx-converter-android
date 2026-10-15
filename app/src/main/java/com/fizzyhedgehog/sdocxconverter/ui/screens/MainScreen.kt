@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Download
@@ -19,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,6 +59,8 @@ fun MainScreen(
     var showBatchSaveDialog by remember { mutableStateOf(false) }
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
+    var showClearCompletedDialog by remember { mutableStateOf(false) }
+    var showDeleteSelectedDialog by remember { mutableStateOf(false) }
 
     val pendingItems = fileList.filter { it.status != ConversionStatus.COMPLETED }
     val completedItems = fileList.filter { it.status == ConversionStatus.COMPLETED }
@@ -82,14 +87,6 @@ fun MainScreen(
                     )
                 },
                 actions = {
-                    if (fileList.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.clearAll() }) {
-                            Icon(
-                                imageVector = Icons.Rounded.DeleteOutline,
-                                contentDescription = stringResource(R.string.btn_clear)
-                            )
-                        }
-                    }
                     IconButton(onClick = { showSettings = true }) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
@@ -197,28 +194,42 @@ fun MainScreen(
                             }
                         }
 
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        // 2. 대기열 목록 및 우측 하단 동그라미 안 '+' 버튼
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
                         ) {
-                            items(pendingItems, key = { it.id }) { item ->
-                                QueueFileCard(
-                                    item = item,
-                                    onRemoveClick = { viewModel.removeFile(item.id) }
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                contentPadding = PaddingValues(bottom = 76.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(pendingItems, key = { it.id }) { item ->
+                                    QueueFileCard(
+                                        item = item,
+                                        onRemoveClick = { viewModel.removeFile(item.id) }
+                                    )
+                                }
+                            }
+
+                            FloatingActionButton(
+                                onClick = onSelectFilesClick,
+                                shape = CircleShape,
+                                containerColor = SamsungOrange,
+                                contentColor = Color.White,
+                                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(end = 8.dp, bottom = 8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = "파일 추가",
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // 2. 아래는 파일 추가 (컴팩트 드롭존)
-                        DropZone(
-                            onSelectFilesClick = onSelectFilesClick,
-                            onSelectFolderClick = onSelectFolderClick,
-                            isCompact = true
-                        )
                     }
                 }
 
@@ -291,7 +302,7 @@ fun MainScreen(
                                         Spacer(modifier = Modifier.width(4.dp))
 
                                         TextButton(
-                                            onClick = { viewModel.clearCompleted() },
+                                            onClick = { showClearCompletedDialog = true },
                                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                         ) {
                                             Text(
@@ -345,54 +356,80 @@ fun MainScreen(
                         }
 
                         if (isSelectionMode && completedItems.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Row(
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                FilledTonalButton(
-                                    onClick = {
-                                        val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                        if (uris.isNotEmpty()) {
-                                            viewModel.exportBatchPdfsToDownloads(uris, context)
-                                            isSelectionMode = false
-                                            selectedIds = emptySet()
-                                        }
-                                    },
-                                    enabled = selectedIds.isNotEmpty(),
-                                    modifier = Modifier.weight(1f),
-                                    contentPadding = PaddingValues(vertical = 6.dp)
+                                // 윗줄: 다운로드에 저장 / 공유
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp), tint = SamsungOrange)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("다운로드에 저장", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    FilledTonalButton(
+                                        onClick = {
+                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                            if (uris.isNotEmpty()) {
+                                                viewModel.exportBatchPdfsToDownloads(uris, context)
+                                                isSelectionMode = false
+                                                selectedIds = emptySet()
+                                            }
+                                        },
+                                        enabled = selectedIds.isNotEmpty(),
+                                        modifier = Modifier.weight(1f),
+                                        contentPadding = PaddingValues(vertical = 8.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp), tint = SamsungOrange)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(stringResource(R.string.btn_save_to_downloads), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                            if (uris.isNotEmpty()) shareMultiplePdfs(context, uris)
+                                        },
+                                        enabled = selectedIds.isNotEmpty(),
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = SamsungOrange),
+                                        contentPadding = PaddingValues(vertical = 8.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(stringResource(R.string.btn_share), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    }
                                 }
 
-                                IconButton(
-                                    onClick = { showBatchSaveDialog = true },
-                                    enabled = selectedIds.isNotEmpty(),
-                                    modifier = Modifier.size(38.dp)
+                                // 아랫줄: 저장할 폴더 선택 (파일 모양) / 삭제
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(
-                                        Icons.Rounded.FolderOpen,
-                                        contentDescription = "다른 폴더 선택",
-                                        tint = if (selectedIds.isNotEmpty()) SamsungOrange else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                    )
-                                }
+                                    OutlinedButton(
+                                        onClick = { showBatchSaveDialog = true },
+                                        enabled = selectedIds.isNotEmpty(),
+                                        modifier = Modifier.weight(1f),
+                                        contentPadding = PaddingValues(vertical = 8.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp), tint = SamsungOrange)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(stringResource(R.string.btn_save_to_custom_folder), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    }
 
-                                Button(
-                                    onClick = {
-                                        val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                        if (uris.isNotEmpty()) shareMultiplePdfs(context, uris)
-                                    },
-                                    enabled = selectedIds.isNotEmpty(),
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = SamsungOrange),
-                                    contentPadding = PaddingValues(vertical = 6.dp)
-                                ) {
-                                    Icon(Icons.Rounded.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("공유", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    FilledTonalButton(
+                                        onClick = { showDeleteSelectedDialog = true },
+                                        enabled = selectedIds.isNotEmpty(),
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.filledTonalButtonColors(
+                                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                        ),
+                                        contentPadding = PaddingValues(vertical = 8.dp)
+                                    ) {
+                                        Icon(Icons.Rounded.DeleteOutline, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(stringResource(R.string.btn_delete_selected), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -511,14 +548,27 @@ fun MainScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            TextButton(
-                                onClick = { viewModel.clearQueue() },
-                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.btn_clear_queue),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = onSelectFilesClick,
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Add,
+                                        contentDescription = "파일 추가",
+                                        tint = SamsungOrange
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(4.dp))
+                                TextButton(
+                                    onClick = { viewModel.clearQueue() },
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.btn_clear_queue),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
                             }
                         }
                     }
@@ -580,7 +630,7 @@ fun MainScreen(
                                             )
                                         }
                                         TextButton(
-                                            onClick = { viewModel.clearCompleted() },
+                                            onClick = { showClearCompletedDialog = true },
                                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
@@ -629,54 +679,80 @@ fun MainScreen(
                             }
 
                             if (isSelectionMode) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Row(
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Column(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    FilledTonalButton(
-                                        onClick = {
-                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                            if (uris.isNotEmpty()) {
-                                                viewModel.exportBatchPdfsToDownloads(uris, context)
-                                                isSelectionMode = false
-                                                selectedIds = emptySet()
-                                            }
-                                        },
-                                        enabled = selectedIds.isNotEmpty(),
-                                        modifier = Modifier.weight(1f),
-                                        contentPadding = PaddingValues(vertical = 4.dp)
+                                    // 윗줄: 다운로드에 저장 / 공유
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(14.dp), tint = SamsungOrange)
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("다운로드에 저장", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        FilledTonalButton(
+                                            onClick = {
+                                                val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                                if (uris.isNotEmpty()) {
+                                                    viewModel.exportBatchPdfsToDownloads(uris, context)
+                                                    isSelectionMode = false
+                                                    selectedIds = emptySet()
+                                                }
+                                            },
+                                            enabled = selectedIds.isNotEmpty(),
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(vertical = 6.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(15.dp), tint = SamsungOrange)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(stringResource(R.string.btn_save_to_downloads), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        }
+
+                                        Button(
+                                            onClick = {
+                                                val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                                if (uris.isNotEmpty()) shareMultiplePdfs(context, uris)
+                                            },
+                                            enabled = selectedIds.isNotEmpty(),
+                                            modifier = Modifier.weight(1f),
+                                            colors = ButtonDefaults.buttonColors(containerColor = SamsungOrange),
+                                            contentPadding = PaddingValues(vertical = 6.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.Share, contentDescription = null, modifier = Modifier.size(15.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(stringResource(R.string.btn_share), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        }
                                     }
 
-                                    IconButton(
-                                        onClick = { showBatchSaveDialog = true },
-                                        enabled = selectedIds.isNotEmpty(),
-                                        modifier = Modifier.size(34.dp)
+                                    // 아랫줄: 저장할 폴더 선택 (파일 모양) / 삭제
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Icon(
-                                            Icons.Rounded.FolderOpen,
-                                            contentDescription = "다른 폴더 선택",
-                                            tint = if (selectedIds.isNotEmpty()) SamsungOrange else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                        )
-                                    }
+                                        OutlinedButton(
+                                            onClick = { showBatchSaveDialog = true },
+                                            enabled = selectedIds.isNotEmpty(),
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(vertical = 6.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.FolderOpen, contentDescription = null, modifier = Modifier.size(15.dp), tint = SamsungOrange)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(stringResource(R.string.btn_save_to_custom_folder), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        }
 
-                                    Button(
-                                        onClick = {
-                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                            if (uris.isNotEmpty()) shareMultiplePdfs(context, uris)
-                                        },
-                                        enabled = selectedIds.isNotEmpty(),
-                                        modifier = Modifier.weight(1f),
-                                        colors = ButtonDefaults.buttonColors(containerColor = SamsungOrange),
-                                        contentPadding = PaddingValues(vertical = 4.dp)
-                                    ) {
-                                        Icon(Icons.Rounded.Share, contentDescription = null, modifier = Modifier.size(14.dp))
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("공유", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        FilledTonalButton(
+                                            onClick = { showDeleteSelectedDialog = true },
+                                            enabled = selectedIds.isNotEmpty(),
+                                            modifier = Modifier.weight(1f),
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                            ),
+                                            contentPadding = PaddingValues(vertical = 6.dp)
+                                        ) {
+                                            Icon(Icons.Rounded.DeleteOutline, contentDescription = null, modifier = Modifier.size(15.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(stringResource(R.string.btn_delete_selected), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        }
                                     }
                                 }
                             }
@@ -755,6 +831,77 @@ fun MainScreen(
                     selectedIds = emptySet()
                 }
             } else null
+        )
+    }
+
+    if (showClearCompletedDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearCompletedDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.clear_completed_dialog_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(stringResource(R.string.clear_completed_dialog_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearCompletedDialog = false
+                        viewModel.clearCompleted()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_dialog_confirm_select),
+                        color = SamsungOrange,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCompletedDialog = false }) {
+                    Text(stringResource(R.string.btn_dialog_cancel))
+                }
+            }
+        )
+    }
+
+    if (showDeleteSelectedDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteSelectedDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.delete_selected_dialog_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(stringResource(R.string.delete_selected_dialog_message, selectedIds.size))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteSelectedDialog = false
+                        val idsToDelete = selectedIds.toList()
+                        idsToDelete.forEach { id -> viewModel.removeFile(id) }
+                        selectedIds = emptySet()
+                        isSelectionMode = false
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_dialog_confirm_select),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteSelectedDialog = false }) {
+                    Text(stringResource(R.string.btn_dialog_cancel))
+                }
+            }
         )
     }
 }

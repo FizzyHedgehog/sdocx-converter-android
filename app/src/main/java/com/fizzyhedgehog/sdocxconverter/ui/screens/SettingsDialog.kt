@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,15 @@ fun SettingsDialog(
     onSave: (ConverterSettings) -> Unit,
     onSelectDefaultSaveFolderClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val appVersionName = remember(context) {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "1.0.0"
+        } catch (_: Exception) {
+            "1.0.0"
+        }
+    }
     var penScale by remember { mutableStateOf(currentSettings.penScale.toFloat()) }
     var markerScale by remember { mutableStateOf(currentSettings.markerScale.toFloat()) }
     var splitOption by remember { mutableStateOf(currentSettings.splitOption) }
@@ -251,7 +261,7 @@ fun SettingsDialog(
                                 ) {
                                     Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("다운로드 폴더 (기본값)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.btn_save_folder_downloads), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                                 }
 
                                 OutlinedButton(
@@ -348,6 +358,13 @@ fun SettingsDialog(
                     text = stringResource(R.string.license_notice),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.app_version_label, appVersionName),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
             }
         },

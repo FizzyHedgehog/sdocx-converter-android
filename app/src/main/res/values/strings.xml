@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">SDOCX Converter</string>
-    <string name="drop_hint">Add .sdocx Files or Folders</string>
-    <string name="drop_subhint">Select multiple files, or select a folder to import all .sdocx notes at once</string>
-    <string name="drop_compact_hint">Add Files or Folders</string>
-    <string name="drop_compact_subhint">Supports multi-file selection &amp; folder import</string>
+    <string name="drop_hint">Add .sdocx Documents</string>
+    <string name="drop_subhint">Tap here to select documents or folders to convert</string>
+    <string name="drop_compact_hint">Add Documents or Folders</string>
+    <string name="drop_compact_subhint">Tap here to select documents or folders to convert</string>
     <string name="btn_select_files_multi">Select Files (Multi)</string>
     <string name="btn_select_folder">Select Folder</string>
     <string name="btn_add_files">Add Files</string>
@@ -75,4 +75,17 @@
     <!-- Duplicate alerts -->
     <string name="file_already_completed">File has already been converted: %1$s</string>
     <string name="file_already_queued">File is already in the conversion queue: %1$s</string>
+
+    <!-- Confirmation dialogs & Selection actions -->
+    <string name="btn_save_to_downloads">Save to Downloads</string>
+    <string name="btn_save_to_custom_folder">Select Save Folder</string>
+    <string name="btn_delete_selected">Delete</string>
+    <string name="btn_save_folder_downloads">Download Folder</string>
+    <string name="clear_completed_dialog_title">Clear Completed List</string>
+    <string name="clear_completed_dialog_message">Are you sure you want to remove all converted files from the list?</string>
+    <string name="delete_selected_dialog_title">Delete Files</string>
+    <string name="delete_selected_dialog_message">A total of %1$d files will be deleted.</string>
+    <string name="btn_dialog_confirm_select">Select</string>
+    <string name="btn_dialog_cancel">Cancel</string>
+    <string name="app_version_label">Version %1$s</string>
 </resources>
