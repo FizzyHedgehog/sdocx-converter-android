@@ -1,6 +1,14 @@
 package com.fizzyhedgehog.sdocxconverter.ui.components
 
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -9,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -21,18 +30,83 @@ import com.fizzyhedgehog.sdocxconverter.ui.theme.ErrorRed
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SuccessGreen
 
+fun formatFileSize(bytes: Long): String {
+    return if (bytes > 1024 * 1024) {
+        String.format("%.1f MB", bytes / (1024.0 * 1024.0))
+    } else {
+        String.format("%.1f KB", bytes / 1024.0)
+    }
+}
+
+fun openPdf(context: Context, uri: Uri) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.btn_open_pdf)))
+    } catch (e: Exception) {
+        Toast.makeText(context, context.getString(R.string.open_pdf_error), Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun openPdfFolder(context: Context) {
+    var opened = false
+    try {
+        val intent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+        opened = true
+    } catch (_: Exception) {}
+
+    if (!opened) {
+        try {
+            val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload%2FSDOCX_PDF")
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "vnd.android.document/directory")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            opened = true
+        } catch (_: Exception) {}
+    }
+
+    if (!opened) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(MediaStore.Downloads.EXTERNAL_CONTENT_URI, "*/*")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            opened = true
+        } catch (_: Exception) {}
+    }
+
+    Toast.makeText(context, context.getString(R.string.toast_pdf_folder_hint), Toast.LENGTH_LONG).show()
+}
+
+fun sharePdf(context: Context, uri: Uri, title: String) {
+    try {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_title)))
+    } catch (e: Exception) {
+        Toast.makeText(context, "공유 실패: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+    }
+}
+
 @Composable
-fun FileCard(
+fun QueueFileCard(
     item: SdocxFileItem,
     onRemoveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val sizeText = if (item.sizeBytes > 1024 * 1024) {
-        String.format("%.1f MB", item.sizeBytes / (1024.0 * 1024.0))
-    } else {
-        String.format("%.1f KB", item.sizeBytes / 1024.0)
-    }
+    val sizeText = formatFileSize(item.sizeBytes)
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -45,22 +119,29 @@ fun FileCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Rounded.Description,
-                contentDescription = null,
-                tint = SamsungOrange,
-                modifier = Modifier.size(36.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFFFF3E0), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Description,
+                    contentDescription = "SDOCX",
+                    tint = SamsungOrange,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.name,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -85,14 +166,7 @@ fun FileCard(
                             Text(
                                 text = stringResource(R.string.status_converting),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = SamsungOrange
-                            )
-                        }
-                        ConversionStatus.COMPLETED -> {
-                            Text(
-                                text = stringResource(R.string.status_completed),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = SuccessGreen,
+                                color = SamsungOrange,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -103,50 +177,184 @@ fun FileCard(
                                 color = ErrorRed
                             )
                         }
+                        ConversionStatus.COMPLETED -> {}
                     }
                 }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            when (item.status) {
-                ConversionStatus.CONVERTING -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = SamsungOrange
+            if (item.status == ConversionStatus.CONVERTING) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    strokeWidth = 2.5.dp,
+                    color = SamsungOrange
+                )
+            } else {
+                IconButton(onClick = onRemoveClick) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = "삭제",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-                ConversionStatus.COMPLETED -> {
-                    if (item.outputPdfUri != null) {
-                        IconButton(
-                            onClick = {
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "application/pdf"
-                                    putExtra(Intent.EXTRA_STREAM, item.outputPdfUri)
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                                context.startActivity(Intent.createChooser(shareIntent, "PDF 공유"))
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Share,
-                                contentDescription = "공유",
-                                tint = SamsungOrange
-                            )
-                        }
-                    }
-                }
-                else -> {
-                    IconButton(onClick = onRemoveClick) {
-                        Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = "삭제",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ConvertedPdfCard(
+    item: SdocxFileItem,
+    onOpenPdf: () -> Unit,
+    onOpenFolder: () -> Unit,
+    onShare: () -> Unit,
+    onRemoveClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val pdfDisplayName = item.outputPdfName ?: (item.name.substringBeforeLast(".") + ".pdf")
+    val sizeText = formatFileSize(if (item.outputPdfSizeBytes > 0) item.outputPdfSizeBytes else item.sizeBytes)
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onOpenPdf() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFFFEBEE), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PictureAsPdf,
+                    contentDescription = "PDF",
+                    tint = Color(0xFFD32F2F),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = pdfDisplayName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        tint = SuccessGreen,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = stringResource(R.string.status_completed),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SuccessGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "·  $sizeText",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onOpenPdf,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Visibility,
+                        contentDescription = stringResource(R.string.btn_open_pdf),
+                        tint = SamsungOrange,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = onOpenFolder,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.FolderOpen,
+                        contentDescription = stringResource(R.string.btn_open_folder),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = onShare,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = stringResource(R.string.btn_share),
+                        tint = SamsungOrange,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = onRemoveClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = "삭제",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FileCard(
+    item: SdocxFileItem,
+    onRemoveClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    if (item.status == ConversionStatus.COMPLETED) {
+        ConvertedPdfCard(
+            item = item,
+            onOpenPdf = { item.outputPdfUri?.let { openPdf(context, it) } },
+            onOpenFolder = { openPdfFolder(context) },
+            onShare = { item.outputPdfUri?.let { sharePdf(context, it, item.outputPdfName ?: item.name) } },
+            onRemoveClick = onRemoveClick,
+            modifier = modifier
+        )
+    } else {
+        QueueFileCard(
+            item = item,
+            onRemoveClick = onRemoveClick,
+            modifier = modifier
+        )
     }
 }

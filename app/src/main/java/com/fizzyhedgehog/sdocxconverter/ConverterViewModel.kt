@@ -65,6 +65,14 @@ class ConverterViewModel : ViewModel() {
         _fileList.value = _fileList.value.filter { it.id != id }
     }
 
+    fun clearQueue() {
+        _fileList.value = _fileList.value.filter { it.status == ConversionStatus.COMPLETED }
+    }
+
+    fun clearCompleted() {
+        _fileList.value = _fileList.value.filter { it.status != ConversionStatus.COMPLETED }
+    }
+
     fun clearAll() {
         _fileList.value = emptyList()
     }
@@ -90,25 +98,34 @@ class ConverterViewModel : ViewModel() {
                     processConversion(item, currentSettings, context)
                 }
 
-                if (result.first) {
-                    updateItemCompleted(item.id, result.second)
+                if (result.success) {
+                    updateItemCompleted(item.id, result.uri, result.pdfName, result.pdfSizeBytes)
                 } else {
-                    updateItemError(item.id, result.third ?: "변환 실패")
+                    updateItemError(item.id, result.errorMessage ?: "변환 실패")
                 }
             }
             _isConverting.value = false
         }
     }
 
+    private data class ConversionResult(
+        val success: Boolean,
+        val uri: Uri? = null,
+        val pdfName: String = "",
+        val pdfSizeBytes: Long = 0L,
+        val errorMessage: String? = null
+    )
+
     private fun processConversion(
         item: SdocxFileItem,
         settings: ConverterSettings,
         context: Context
-    ): Triple<Boolean, Uri?, String?> {
+    ): ConversionResult {
         val cacheDir = context.cacheDir
         val tempInput = File(cacheDir, "input_${item.id}.sdocx")
         val baseName = item.name.substringBeforeLast(".")
-        val tempOutput = File(cacheDir, "$baseName.pdf")
+        val pdfName = "$baseName.pdf"
+        val tempOutput = File(cacheDir, pdfName)
 
         try {
             // 1. Content URI -> 임시 로컬 파일 복사
@@ -116,7 +133,7 @@ class ConverterViewModel : ViewModel() {
                 FileOutputStream(tempInput).use { output ->
                     input.copyTo(output)
                 }
-            } ?: return Triple(false, null, "파일을 읽을 수 없습니다.")
+            } ?: return ConversionResult(false, null, pdfName, 0L, "파일을 읽을 수 없습니다.")
 
             // 2. Native Rust 변환 엔진 호출
             if (NativeConverter.isNativeAvailable()) {
@@ -129,23 +146,29 @@ class ConverterViewModel : ViewModel() {
                     autoSplit = settings.autoSplit
                 )
                 if (exitCode != 0 || !tempOutput.exists()) {
-                    return Triple(false, null, "변환 엔진 오류 (코드: $exitCode)")
+                    return ConversionResult(false, null, pdfName, 0L, "변환 엔진 오류 (코드: $exitCode)")
                 }
             } else {
                 // 네이티브 모듈 로드 전 시뮬레이션 / 안전 플레이스홀더
-                return Triple(false, null, "네이티브 변환 엔진(libsdocx2pdf.so)이 탑재되지 않았습니다.")
+                return ConversionResult(false, null, pdfName, 0L, "네이티브 변환 엔진(libsdocx2pdf.so)이 탑재되지 않았습니다.")
             }
 
             // 3. MediaStore를 통해 '다운로드' 폴더로 저장
-            val savedUri = savePdfToDownloads(context, tempOutput, "$baseName.pdf")
+            val pdfSizeBytes = tempOutput.length()
+            val savedUri = savePdfToDownloads(context, tempOutput, pdfName)
             tempInput.delete()
             tempOutput.delete()
 
-            return Triple(true, savedUri, null)
+            return ConversionResult(
+                success = true,
+                uri = savedUri,
+                pdfName = pdfName,
+                pdfSizeBytes = pdfSizeBytes
+            )
         } catch (e: Exception) {
             tempInput.delete()
             tempOutput.delete()
-            return Triple(false, null, e.localizedMessage ?: "알 수 없는 오류")
+            return ConversionResult(false, null, pdfName, 0L, e.localizedMessage ?: "알 수 없는 오류")
         }
     }
 
@@ -181,9 +204,16 @@ class ConverterViewModel : ViewModel() {
         }
     }
 
-    private fun updateItemCompleted(id: String, outputUri: Uri?) {
+    private fun updateItemCompleted(id: String, outputUri: Uri?, outputName: String, outputSize: Long) {
         _fileList.value = _fileList.value.map {
-            if (it.id == id) it.copy(status = ConversionStatus.COMPLETED, outputPdfUri = outputUri) else it
+            if (it.id == id) {
+                it.copy(
+                    status = ConversionStatus.COMPLETED,
+                    outputPdfUri = outputUri,
+                    outputPdfName = outputName,
+                    outputPdfSizeBytes = outputSize
+                )
+            } else it
         }
     }
 

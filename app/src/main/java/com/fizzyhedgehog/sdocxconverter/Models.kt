@@ -17,7 +17,9 @@ data class SdocxFileItem(
     val status: ConversionStatus = ConversionStatus.PENDING,
     val progress: Float = 0f,
     val errorMessage: String? = null,
-    val outputPdfUri: Uri? = null
+    val outputPdfUri: Uri? = null,
+    val outputPdfName: String? = null,
+    val outputPdfSizeBytes: Long = 0L
 )
 
 data class ConverterSettings(
