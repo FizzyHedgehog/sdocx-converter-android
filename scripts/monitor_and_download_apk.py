@@ -30,7 +30,8 @@ if not TOKEN:
             TOKEN = f.read().strip()
 REPO = "FizzyHedgehog/sdocx-converter-android"
 SSL_CTX = ssl._create_unverified_context()
-OUTPUT_DIR = os.path.expanduser("~/Desktop")
+OUTPUT_DIR = "/tmp/sdocx_apk_build"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 class CrossDomainRedirectHandler(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -119,7 +120,7 @@ def process_and_send_apk(run_id):
         print("[Error] Failed to download artifact after retries.")
         sys.exit(1)
 
-    print("Extracting APK to Desktop...")
+    print(f"Extracting APK to temporary directory {OUTPUT_DIR}...")
     final_apk = os.path.join(OUTPUT_DIR, "SDOCX_Converter.apk")
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         for member in zip_ref.namelist():
@@ -135,7 +136,7 @@ def process_and_send_apk(run_id):
 
     if os.path.exists(final_apk):
         size_mb = os.path.getsize(final_apk) / (1024 * 1024)
-        print(f"🎉 APK successfully extracted to: {final_apk} ({size_mb:.2f} MB)")
+        print(f"🎉 APK successfully extracted: {final_apk} ({size_mb:.2f} MB)")
 
         msg = (
             "🎉 <b>[SDOCX Converter 분할 화면 문서 추가창 최적화 업데이트]</b>\n\n"
@@ -157,6 +158,11 @@ def process_and_send_apk(run_id):
                 caption="📱 SDOCX Converter (최신 빌드 APK)"
             )
             print(f"Telegram document send result: {doc_sent}")
+
+        # 사용자 지침 준수: 맥북 로컬(바탕화면 및 저장소)에 APK를 남기지 않고 즉시 삭제
+        if os.path.exists(final_apk):
+            os.remove(final_apk)
+            print("Cleaned up temporary APK from MacBook.")
         return True
     else:
         print("[Error] APK file not found after extraction!")
