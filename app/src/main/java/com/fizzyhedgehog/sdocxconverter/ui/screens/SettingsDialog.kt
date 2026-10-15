@@ -783,16 +783,14 @@ fun SettingsDialog(
                     OutlinedTextField(
                         value = pinInput,
                         onValueChange = {
-                            if (it.length <= 4) {
-                                pinInput = it
-                                pinError = false
-                            }
+                            pinInput = it
+                            pinError = false
                         },
                         label = { Text(stringResource(R.string.dialog_pin_hint)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.NumberPassword,
+                            keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(

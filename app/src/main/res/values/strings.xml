@@ -160,10 +160,10 @@
     <string name="toast_dev_enabled">Developer mode has been turned on.</string>
     <string name="toast_dev_already_enabled">Developer mode is already turned on.</string>
     <string name="toast_dev_disabled">Developer mode has been turned off.</string>
-    <string name="dialog_pin_title">Unlock Developer Options</string>
-    <string name="dialog_pin_desc">Enter PIN to activate Developer Mode.</string>
-    <string name="dialog_pin_hint">PIN (4 digits)</string>
-    <string name="dialog_pin_wrong">Incorrect PIN. Please try again.</string>
+    <string name="dialog_pin_title">Enter Password</string>
+    <string name="dialog_pin_desc">Enter the password to activate Developer Mode.</string>
+    <string name="dialog_pin_hint">Password</string>
+    <string name="dialog_pin_wrong">Incorrect password. Please try again.</string>
     <string name="section_developer">Developer Options</string>
     <string name="dev_prerelease_label">Pre-release Channel</string>
     <string name="dev_prerelease_desc">Detect Pre-release versions on GitHub as updates before public release.</string>

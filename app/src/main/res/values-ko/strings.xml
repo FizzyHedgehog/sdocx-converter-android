@@ -160,10 +160,10 @@
     <string name="toast_dev_enabled">개발자 모드를 켰습니다.</string>
     <string name="toast_dev_already_enabled">개발자 모드가 이미 켜져 있습니다.</string>
     <string name="toast_dev_disabled">개발자 모드가 꺼졌습니다.</string>
-    <string name="dialog_pin_title">개발자 모드 잠금 해제</string>
-    <string name="dialog_pin_desc">개발자 모드를 활성화하려면 PIN 번호를 입력하세요.</string>
-    <string name="dialog_pin_hint">PIN 번호 (4자리)</string>
-    <string name="dialog_pin_wrong">잘못된 PIN 번호입니다.</string>
+    <string name="dialog_pin_title">암호 입력</string>
+    <string name="dialog_pin_desc">개발자 모드를 활성화하려면 암호를 입력하세요.</string>
+    <string name="dialog_pin_hint">암호</string>
+    <string name="dialog_pin_wrong">잘못된 암호입니다.</string>
     <string name="section_developer">개발자 옵션</string>
     <string name="dev_prerelease_label">사전 출시(Pre-release) 채널</string>
     <string name="dev_prerelease_desc">정식 배포 전 테스트용 Pre-release 버전을 업데이트 대상으로 감지합니다.</string>
