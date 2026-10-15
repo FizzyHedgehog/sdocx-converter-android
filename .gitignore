@@ -5,3 +5,5 @@ local.properties
 .idea/
 .DS_Store
 target/
+__pycache__/
+*.pyc

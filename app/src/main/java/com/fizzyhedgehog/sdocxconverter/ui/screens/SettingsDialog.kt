@@ -40,8 +40,6 @@ fun SettingsDialog(
     }
     var penScale by remember { mutableStateOf(currentSettings.penScale.toFloat()) }
     var markerScale by remember { mutableStateOf(currentSettings.markerScale.toFloat()) }
-    var splitOption by remember { mutableStateOf(currentSettings.splitOption) }
-    var autoSplit by remember { mutableStateOf(currentSettings.autoSplit) }
     var autoSave by remember { mutableStateOf(currentSettings.autoSave) }
     var defaultSaveTreeUri by remember { mutableStateOf(currentSettings.defaultSaveTreeUri) }
     var defaultSaveTreeName by remember { mutableStateOf(currentSettings.defaultSaveTreeName) }
@@ -108,82 +106,7 @@ fun SettingsDialog(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 2. 페이지 분할 모드 (맥북 버전과 동일한 선택지)
-                Text(
-                    text = stringResource(R.string.split_mode_label),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-
-                val splitOptions = listOf(
-                    "" to stringResource(R.string.split_mode_none),
-                    "iso-portrait" to stringResource(R.string.split_mode_portrait),
-                    "iso-landscape" to stringResource(R.string.split_mode_landscape)
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    splitOptions.forEach { (optionKey, optionLabel) ->
-                        val isSelected = splitOption == optionKey
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { splitOption = optionKey }
-                                .padding(vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = { splitOption = optionKey },
-                                colors = RadioButtonDefaults.colors(selectedColor = SamsungOrange)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = optionLabel,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 지능형 자동 페이지 분할 토글
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.auto_split_label),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = stringResource(R.string.auto_split_sublabel),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Switch(
-                        checked = autoSplit,
-                        onCheckedChange = { autoSplit = it },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = SamsungOrange,
-                            checkedTrackColor = SamsungOrange.copy(alpha = 0.5f)
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 3. 저장 위치 설정
+                // 2. 저장 위치 설정
                 Text(
                     text = stringResource(R.string.section_storage),
                     style = MaterialTheme.typography.titleSmall,
@@ -375,8 +298,8 @@ fun SettingsDialog(
                         currentSettings.copy(
                             penScale = penScale.toDouble(),
                             markerScale = markerScale.toDouble(),
-                            splitOption = splitOption,
-                            autoSplit = autoSplit,
+                            splitOption = currentSettings.splitOption,
+                            autoSplit = currentSettings.autoSplit,
                             autoSave = autoSave,
                             defaultSaveTreeUri = defaultSaveTreeUri,
                             defaultSaveTreeName = defaultSaveTreeName,

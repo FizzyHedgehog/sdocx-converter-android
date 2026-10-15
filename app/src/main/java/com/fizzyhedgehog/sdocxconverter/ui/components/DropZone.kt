@@ -109,19 +109,6 @@ fun DropZone(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = SamsungOrange.copy(alpha = 0.12f)
-                    ) {
-                        Text(
-                            text = "어디든 클릭하여 문서 / 폴더 추가",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = SamsungOrange,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                        )
-                    }
                 }
             }
         }
