@@ -81,7 +81,7 @@ fun MainScreen(
             )
         },
         bottomBar = {
-            if (fileList.isNotEmpty()) {
+            if (pendingItems.isNotEmpty() || isConverting) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 3.dp,
@@ -101,12 +101,7 @@ fun MainScreen(
                                 .height(54.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = SamsungOrange,
-                                disabledContainerColor = if (pendingItems.isEmpty() && completedItems.isNotEmpty()) {
-                                    SuccessGreen.copy(alpha = 0.85f)
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                }
+                                containerColor = SamsungOrange
                             )
                         ) {
                             if (isConverting) {
@@ -117,25 +112,11 @@ fun MainScreen(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text("변환 진행 중…", fontWeight = FontWeight.Bold)
-                            } else if (pendingItems.isNotEmpty()) {
+                            } else {
                                 Text(
                                     text = "${stringResource(R.string.btn_convert_all)} (${pendingItems.size})",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Rounded.CheckCircle,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "${stringResource(R.string.btn_all_completed)} (${completedItems.size})",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
@@ -146,7 +127,7 @@ fun MainScreen(
     ) { innerPadding ->
         if (isTabletOrDeX) {
             // 태블릿 / 삼성 DeX 모드:
-            // 좌측(파일 추가 + 변환 대기열 48%) + 구분선 + 우측(변환 완료 파일 52%)
+            // 좌측(변환 대기열 상단 + 파일 추가 하단 48%) + 구분선 + 우측(변환 완료 파일 52%)
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -154,29 +135,22 @@ fun MainScreen(
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // [좌측 패널]: 파일 추가(드롭존) + 변환 대기열
+                // [좌측 패널]: 처음에 파일 추가만 있고, 파일이 들어가면 위에는 대기열, 아래는 파일 추가
                 Column(
                     modifier = Modifier
                         .weight(0.48f)
                         .fillMaxHeight()
                 ) {
                     if (pendingItems.isEmpty()) {
-                        // 대기열이 비어있을 때는 드롭존이 좌측 전체를 시원하게 차지
+                        // 대기 중인 파일이 없을 때: 파일 추가 드롭존이 좌측 전체를 시원하게 차지
                         DropZone(
                             onSelectFilesClick = onSelectFilesClick,
                             isCompact = false,
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        // 대기열에 파일이 있을 때는 드롭존이 상단에 컴팩트하게 자리하고, 아래에 대기열 목록 표시
-                        DropZone(
-                            onSelectFilesClick = onSelectFilesClick,
-                            isCompact = true,
-                            modifier = Modifier.height(145.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
+                        // 대기 중인 파일이 있을 때:
+                        // 1. 위에는 변환 대기열 목록
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -213,6 +187,14 @@ fun MainScreen(
                                 )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // 2. 아래는 파일 추가 (컴팩트 드롭존)
+                        DropZone(
+                            onSelectFilesClick = onSelectFilesClick,
+                            isCompact = true
+                        )
                     }
                 }
 
@@ -372,7 +354,10 @@ fun MainScreen(
             ) {
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
-                    DropZone(onSelectFilesClick = onSelectFilesClick)
+                    DropZone(
+                        onSelectFilesClick = onSelectFilesClick,
+                        modifier = Modifier.fillMaxWidth().height(160.dp)
+                    )
                 }
 
                 if (pendingItems.isNotEmpty()) {

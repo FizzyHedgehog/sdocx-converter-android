@@ -2,6 +2,8 @@
     <string name="app_name">SDOCX Converter Lite</string>
     <string name="drop_hint">Select or Drop .sdocx Files</string>
     <string name="drop_subhint">Drag files from My Files or tap to browse</string>
+    <string name="drop_compact_hint">Add more .sdocx files</string>
+    <string name="drop_compact_subhint">Tap or drag files to add to queue</string>
     <string name="btn_select_files">Browse Files</string>
     <string name="btn_convert_all">Convert All to PDF</string>
     <string name="btn_clear">Clear</string>
