@@ -1,9 +1,15 @@
 <resources>
     <string name="app_name">SDOCX 변환기</string>
-    <string name="drop_hint">.sdocx 파일을 선택하거나 드래그하세요</string>
-    <string name="drop_subhint">\'내 파일\' 앱에서 파일을 끌어오거나 탭하여 선택</string>
-    <string name="drop_compact_hint">.sdocx 파일 추가하기</string>
-    <string name="drop_compact_subhint">탭하여 추가 또는 드래그하여 대기열에 넣기</string>
+    <string name="drop_hint">.sdocx 파일 또는 폴더 추가</string>
+    <string name="drop_subhint">여러 파일을 직접 선택하거나, 폴더를 선택하여 내부의 모든 노트를 일괄 추가하세요</string>
+    <string name="drop_compact_hint">파일 또는 폴더 추가하기</string>
+    <string name="drop_compact_subhint">파일 다중 선택 및 여러 폴더 일괄 추가 지원</string>
+    <string name="btn_select_files_multi">파일 선택 (다중)</string>
+    <string name="btn_select_folder">폴더 선택</string>
+    <string name="btn_add_files">파일 추가</string>
+    <string name="btn_add_folder">폴더 추가</string>
+    <string name="folder_empty_hint">선택한 폴더에 .sdocx 파일이 없습니다.</string>
+    <string name="folder_added_hint">폴더에서 %1$d개의 .sdocx 파일을 추가했습니다.</string>
     <string name="btn_select_files">파일 선택</string>
     <string name="btn_convert_all">모두 PDF로 변환</string>
     <string name="btn_clear">목록 비우기</string>

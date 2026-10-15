@@ -7,6 +7,8 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +61,84 @@ class ConverterViewModel : ViewModel() {
             )
         }
         _fileList.value = current
+    }
+
+    fun addFolderTreeUri(treeUri: Uri, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val rootDoc = try {
+                DocumentFile.fromTreeUri(context, treeUri)
+            } catch (e: Exception) {
+                null
+            }
+
+            if (rootDoc == null || !rootDoc.exists()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "폴더를 열 수 없습니다.", Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
+
+            val foundItems = mutableListOf<SdocxFileItem>()
+            scanFolderRecursively(rootDoc, foundItems, maxDepth = 10, currentDepth = 0)
+
+            withContext(Dispatchers.Main) {
+                if (foundItems.isEmpty()) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.folder_empty_hint),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    val current = _fileList.value.toMutableList()
+                    var addedCount = 0
+                    for (item in foundItems) {
+                        if (current.none { it.uri == item.uri }) {
+                            current.add(item)
+                            addedCount++
+                        }
+                    }
+                    _fileList.value = current
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.folder_added_hint, addedCount),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun scanFolderRecursively(
+        directory: DocumentFile,
+        result: MutableList<SdocxFileItem>,
+        maxDepth: Int,
+        currentDepth: Int
+    ) {
+        if (currentDepth > maxDepth) return
+
+        val children = try {
+            directory.listFiles()
+        } catch (_: Exception) {
+            emptyArray()
+        }
+
+        for (file in children) {
+            if (file.isDirectory) {
+                scanFolderRecursively(file, result, maxDepth, currentDepth + 1)
+            } else if (file.isFile) {
+                val name = file.name ?: ""
+                if (name.endsWith(".sdocx", ignoreCase = true)) {
+                    result.add(
+                        SdocxFileItem(
+                            uri = file.uri,
+                            name = name,
+                            sizeBytes = file.length(),
+                            status = ConversionStatus.PENDING
+                        )
+                    )
+                }
+            }
+        }
     }
 
     fun removeFile(id: String) {

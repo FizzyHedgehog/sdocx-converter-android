@@ -36,7 +36,8 @@ import com.fizzyhedgehog.sdocxconverter.ui.theme.SuccessGreen
 @Composable
 fun MainScreen(
     viewModel: ConverterViewModel,
-    onSelectFilesClick: () -> Unit
+    onSelectFilesClick: () -> Unit,
+    onSelectFolderClick: () -> Unit
 ) {
     val context = LocalContext.current
     val fileList by viewModel.fileList.collectAsState()
@@ -145,6 +146,7 @@ fun MainScreen(
                         // 대기 중인 파일이 없을 때: 파일 추가 드롭존이 좌측 전체를 시원하게 차지
                         DropZone(
                             onSelectFilesClick = onSelectFilesClick,
+                            onSelectFolderClick = onSelectFolderClick,
                             isCompact = false,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -193,6 +195,7 @@ fun MainScreen(
                         // 2. 아래는 파일 추가 (컴팩트 드롭존)
                         DropZone(
                             onSelectFilesClick = onSelectFilesClick,
+                            onSelectFolderClick = onSelectFolderClick,
                             isCompact = true
                         )
                     }
@@ -356,7 +359,8 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     DropZone(
                         onSelectFilesClick = onSelectFilesClick,
-                        modifier = Modifier.fillMaxWidth().height(160.dp)
+                        onSelectFolderClick = onSelectFolderClick,
+                        modifier = Modifier.fillMaxWidth().height(180.dp)
                     )
                 }
 

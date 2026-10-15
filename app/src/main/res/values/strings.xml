@@ -1,9 +1,15 @@
 <resources>
     <string name="app_name">SDOCX Converter Lite</string>
-    <string name="drop_hint">Select or Drop .sdocx Files</string>
-    <string name="drop_subhint">Drag files from My Files or tap to browse</string>
-    <string name="drop_compact_hint">Add more .sdocx files</string>
-    <string name="drop_compact_subhint">Tap or drag files to add to queue</string>
+    <string name="drop_hint">Add .sdocx Files or Folders</string>
+    <string name="drop_subhint">Select multiple files, or select a folder to import all .sdocx notes at once</string>
+    <string name="drop_compact_hint">Add Files or Folders</string>
+    <string name="drop_compact_subhint">Supports multi-file selection &amp; folder import</string>
+    <string name="btn_select_files_multi">Select Files (Multi)</string>
+    <string name="btn_select_folder">Select Folder</string>
+    <string name="btn_add_files">Add Files</string>
+    <string name="btn_add_folder">Add Folder</string>
+    <string name="folder_empty_hint">No .sdocx files found in selected folder.</string>
+    <string name="folder_added_hint">Added %1$d .sdocx files from folder.</string>
     <string name="btn_select_files">Browse Files</string>
     <string name="btn_convert_all">Convert All to PDF</string>
     <string name="btn_clear">Clear</string>

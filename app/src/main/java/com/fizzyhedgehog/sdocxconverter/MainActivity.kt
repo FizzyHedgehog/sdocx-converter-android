@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,11 +25,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val selectFolderLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { treeUri: Uri? ->
+        if (treeUri != null) {
+            try {
+                contentResolver.takePersistableUriPermission(
+                    treeUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            viewModel.addFolderTreeUri(treeUri, this)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // 인텐트로 전달된 .sdocx 파일 처리 (공유하기 또는 연결 프로그램)
+        // 인텐트로 전달된 .sdocx 파일/폴더 처리 (공유하기 또는 연결 프로그램)
         handleIntent(intent)
 
         setContent {
@@ -37,6 +52,9 @@ class MainActivity : ComponentActivity() {
                     viewModel = viewModel,
                     onSelectFilesClick = {
                         selectFilesLauncher.launch(arrayOf("*/*"))
+                    },
+                    onSelectFolderClick = {
+                        selectFolderLauncher.launch(null)
                     }
                 )
             }
@@ -55,7 +73,12 @@ class MainActivity : ComponentActivity() {
         when (intent.action) {
             Intent.ACTION_VIEW -> {
                 intent.data?.let { uri ->
-                    viewModel.addUris(listOf(uri), this)
+                    val mime = contentResolver.getType(uri)
+                    if (mime == "vnd.android.document/directory" || DocumentsContract.isTreeUri(uri)) {
+                        viewModel.addFolderTreeUri(uri, this)
+                    } else {
+                        viewModel.addUris(listOf(uri), this)
+                    }
                 }
             }
             Intent.ACTION_SEND -> {
@@ -66,7 +89,12 @@ class MainActivity : ComponentActivity() {
                     intent.getParcelableExtra(Intent.EXTRA_STREAM)
                 }
                 if (uri != null) {
-                    viewModel.addUris(listOf(uri), this)
+                    val mime = contentResolver.getType(uri)
+                    if (mime == "vnd.android.document/directory" || DocumentsContract.isTreeUri(uri)) {
+                        viewModel.addFolderTreeUri(uri, this)
+                    } else {
+                        viewModel.addUris(listOf(uri), this)
+                    }
                 }
             }
             Intent.ACTION_SEND_MULTIPLE -> {
@@ -77,7 +105,18 @@ class MainActivity : ComponentActivity() {
                     intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
                 }
                 if (!uris.isNullOrEmpty()) {
-                    viewModel.addUris(uris, this)
+                    val fileUris = mutableListOf<Uri>()
+                    for (u in uris) {
+                        val mime = contentResolver.getType(u)
+                        if (mime == "vnd.android.document/directory" || DocumentsContract.isTreeUri(u)) {
+                            viewModel.addFolderTreeUri(u, this)
+                        } else {
+                            fileUris.add(u)
+                        }
+                    }
+                    if (fileUris.isNotEmpty()) {
+                        viewModel.addUris(fileUris, this)
+                    }
                 }
             }
         }
