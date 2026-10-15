@@ -70,3 +70,19 @@
   - Tested and delivered to user via Telegram.
 - **Pending Action**:
   - Awaiting user's final confirmation to merge `feature/background-share` into `main` and tag Release `v1.1.0`.
+
+---
+
+## 6. Telegram Integration & Listener Rules
+
+- Telegram config: `~/.config/sdocx_telegram_config.json`
+- Notification utility: `python3 /Users/kyungmolee01/.sdocx_telegram_agent/notify_telegram.py`
+- **Telegram Incoming Command Listener**:
+  - Script: `python3 /Users/kyungmolee01/.sdocx_telegram_agent/wait_for_telegram_android.py`
+  - Group: `sdocx-converter-android` (Chat ID: `-5102225522`)
+  - **OPERATIONAL RULE**:
+    Whenever the user says **"텔레그램 대기"**, **"텔레그램 기다려"**, **"대기해"**, or asks to wait for Telegram messages:
+    You **MUST execute the listener as a background task**:
+    `run_command(CommandLine="python3 /Users/kyungmolee01/.sdocx_telegram_agent/wait_for_telegram_android.py", Cwd="/Users/kyungmolee01/Projects/sdocx-converter-android", WaitMsBeforeAsync=1000)`
+    Do NOT simply reply "대기하겠습니다" with plain text. Always launch the background listener so you wake up reactively when a command arrives from the Android Telegram group!
+
