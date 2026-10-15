@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fizzyhedgehog.sdocxconverter.ConverterSettings
 import com.fizzyhedgehog.sdocxconverter.R
+import com.fizzyhedgehog.sdocxconverter.ShareReceiveAction
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 
 @Composable
@@ -44,6 +45,7 @@ fun SettingsDialog(
     var defaultSaveTreeUri by remember { mutableStateOf(currentSettings.defaultSaveTreeUri) }
     var defaultSaveTreeName by remember { mutableStateOf(currentSettings.defaultSaveTreeName) }
     var notifyOnCompletion by remember { mutableStateOf(currentSettings.notifyOnCompletion) }
+    var shareReceiveAction by remember { mutableStateOf(currentSettings.shareReceiveAction) }
 
     // 외부에서 defaultSaveTreeUri가 갱신되면 동기화
     LaunchedEffect(currentSettings.defaultSaveTreeUri, currentSettings.defaultSaveTreeName) {
@@ -231,6 +233,111 @@ fun SettingsDialog(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // 3. 외부 공유 수신 시 동작 설정
+                Text(
+                    text = stringResource(R.string.section_share_action),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.section_share_action_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 옵션 1: 기본 동작 (앱 열기)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { shareReceiveAction = ShareReceiveAction.OPEN_APP }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = (shareReceiveAction == ShareReceiveAction.OPEN_APP),
+                        onClick = { shareReceiveAction = ShareReceiveAction.OPEN_APP },
+                        colors = RadioButtonDefaults.colors(selectedColor = SamsungOrange)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.share_action_open_app_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.share_action_open_app_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // 옵션 2: 백그라운드 무음 자동 저장
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { shareReceiveAction = ShareReceiveAction.AUTO_SAVE }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = (shareReceiveAction == ShareReceiveAction.AUTO_SAVE),
+                        onClick = { shareReceiveAction = ShareReceiveAction.AUTO_SAVE },
+                        colors = RadioButtonDefaults.colors(selectedColor = SamsungOrange)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.share_action_auto_save_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.share_action_auto_save_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // 옵션 3: 변환 후 즉시 PDF 재공유
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { shareReceiveAction = ShareReceiveAction.RE_SHARE }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = (shareReceiveAction == ShareReceiveAction.RE_SHARE),
+                        onClick = { shareReceiveAction = ShareReceiveAction.RE_SHARE },
+                        colors = RadioButtonDefaults.colors(selectedColor = SamsungOrange)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.share_action_re_share_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.share_action_re_share_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // 4. 알림 설정
                 Text(
                     text = stringResource(R.string.section_notification),
@@ -304,7 +411,8 @@ fun SettingsDialog(
                             autoSave = autoSave,
                             defaultSaveTreeUri = defaultSaveTreeUri,
                             defaultSaveTreeName = defaultSaveTreeName,
-                            notifyOnCompletion = notifyOnCompletion
+                            notifyOnCompletion = notifyOnCompletion,
+                            shareReceiveAction = shareReceiveAction
                         )
                     )
                     onDismiss()

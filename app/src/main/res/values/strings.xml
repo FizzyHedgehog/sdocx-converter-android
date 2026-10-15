@@ -65,6 +65,20 @@
     <string name="btn_select_save_folder">Select Folder</string>
     <string name="btn_reset_save_folder">Reset</string>
 
+    <!-- Share receive action settings -->
+    <string name="section_share_action">Action on Received Share</string>
+    <string name="section_share_action_desc">Choose how the app handles notes shared from Samsung Notes or other apps.</string>
+    <string name="share_action_open_app_title">Default (Open App)</string>
+    <string name="share_action_open_app_desc">Opens the main app screen and adds notes to the queue.</string>
+    <string name="share_action_auto_save_title">Background Silent Auto-Save</string>
+    <string name="share_action_auto_save_desc">Converts in the background and saves PDF without opening the app.</string>
+    <string name="share_action_re_share_title">Instant Re-Share PDF</string>
+    <string name="share_action_re_share_desc">Converts in the background and immediately opens the system share sheet.</string>
+    <string name="toast_background_converting">Converting SDOCX to PDF…</string>
+    <string name="toast_background_save_complete">Saved: \'%1$s\'</string>
+    <string name="toast_background_save_multi_complete">%1$d PDF files saved successfully.</string>
+    <string name="toast_background_convert_error">Conversion failed: %1$s</string>
+
     <!-- Notifications -->
     <string name="section_notification">Notifications</string>
     <string name="notify_label">Notify on completion</string>

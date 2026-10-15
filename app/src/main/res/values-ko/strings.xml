@@ -65,6 +65,20 @@
     <string name="btn_select_save_folder">폴더 지정</string>
     <string name="btn_reset_save_folder">기본값 복원</string>
 
+    <!-- 외부 공유 수신 시 동작 설정 -->
+    <string name="section_share_action">외부 공유 수신 시 동작</string>
+    <string name="section_share_action_desc">삼성노트 등 다른 앱에서 [공유]로 전달받았을 때의 동작을 선택합니다.</string>
+    <string name="share_action_open_app_title">기본 동작 (앱 열기)</string>
+    <string name="share_action_open_app_desc">앱 메인 화면을 열고 변환 대기열에 추가합니다.</string>
+    <string name="share_action_auto_save_title">백그라운드 무음 자동 저장</string>
+    <string name="share_action_auto_save_desc">앱 화면 없이 백그라운드에서 즉시 변환하여 지정 폴더에 저장합니다.</string>
+    <string name="share_action_re_share_title">변환 후 즉시 PDF 재공유</string>
+    <string name="share_action_re_share_desc">앱 화면 없이 변환 후 카카오톡, 퀵쉐어 등 공유창을 즉시 띄웁니다.</string>
+    <string name="toast_background_converting">SDOCX를 PDF로 변환하는 중…</string>
+    <string name="toast_background_save_complete">\'%1$s\' 저장이 완료되었습니다.</string>
+    <string name="toast_background_save_multi_complete">총 %1$d개 파일의 PDF 저장이 완료되었습니다.</string>
+    <string name="toast_background_convert_error">PDF 변환 실패: %1$s</string>
+
     <!-- 알림 설정 -->
     <string name="section_notification">알림</string>
     <string name="notify_label">변환 완료 시 시스템 알림 받기</string>

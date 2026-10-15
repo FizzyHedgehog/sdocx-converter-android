@@ -139,13 +139,18 @@ def process_and_send_apk(run_id):
         print(f"🎉 APK successfully extracted: {final_apk} ({size_mb:.2f} MB)")
 
         msg = (
-            "🎉 <b>[SDOCX Converter 분할 화면 문서 추가창 최적화 업데이트]</b>\n\n"
-            "멀티윈도우 분할 화면에서도 문서 추가 영역의 모든 내용이 한눈에 보이도록 완벽히 개선되었습니다!\n\n"
-            "🔍 <b>변경 내용:</b>\n"
-            "• <b>폴더 아이콘 가로 배치</b>: 폴더 아이콘을 타이틀 옆에 나란히 배치(<code>[ 📁 .sdocx 문서 추가 ]</code>)하여 세로 공간을 획기적으로 절약했습니다.\n"
-            "• <b>고정 높이 제한 해제 & 동적 확장</b>: 180dp로 제한되어 있던 높이를 해제하고 내용에 맞게 자연스럽게 확장(<code>wrapContentHeight</code>)되도록 변경하여, 분할 화면에서도 안내 문구와 정책 안내 박스가 잘림 없이 시원하게 표시됩니다.\n\n"
+            "🚀 <b>[SDOCX Converter 백그라운드 무음 저장 & 즉시 재공유 테스트 빌드]</b>\n\n"
+            "삼성노트 연동 생산성을 극대화하는 2가지 새로운 백그라운드 공유 기능이 추가된 테스트용 APK입니다!\n"
+            "(※ 깃허브 공개 릴리즈나 메인 페이지는 전혀 건드리지 않고 독립 브랜치에서 안전하게 빌드되었습니다.)\n\n"
+            "🔍 <b>새로 추가된 핵심 기능:</b>\n"
+            "1. <b>백그라운드 무음 자동 저장 (앱 화면 없이 즉시 저장)</b>:\n"
+            "   • 삼성노트에서 [공유] ➔ [SDOCX Converter] 터치 시 앱 화면이 전혀 뜨지 않고 백그라운드에서 순식간에 PDF로 변환하여 지정 폴더(또는 다운로드)에 조용히 저장합니다.\n\n"
+            "2. <b>변환 후 즉시 PDF 재공유 (원터치 전송)</b>:\n"
+            "   • 삼성노트에서 공유 시 앱 화면 없이 백그라운드에서 변환을 마친 뒤, 카카오톡/퀵쉐어 등 시스템 공유창을 즉시 팝업합니다.\n\n"
+            "3. <b>설정(Settings) 제어</b>:\n"
+            "   • 설정 창의 [외부 공유 수신 시 동작]에서 ① 기본 동작(앱 열기), ② 백그라운드 무음 자동 저장, ③ 변환 후 즉시 재공유 중 언제든 자유롭게 선택할 수 있습니다.\n\n"
             f"• 파일명: <code>SDOCX_Converter.apk</code> ({size_mb:.2f} MB)\n\n"
-            "아래 첨부된 최신 APK 파일을 다운로드하여 탭에서 바로 확인해보세요!"
+            "아래 첨부된 테스트 APK를 설치하여 갤럭시 기기에서 테스트해보세요!"
         )
 
         if notify_telegram:
@@ -155,7 +160,7 @@ def process_and_send_apk(run_id):
             print("Sending APK file to Telegram...")
             doc_sent = notify_telegram.send_telegram_document(
                 final_apk,
-                caption="📱 SDOCX Converter (최신 빌드 APK)"
+                caption="📱 SDOCX Converter (백그라운드 공유 테스트 APK)"
             )
             print(f"Telegram document send result: {doc_sent}")
 
