@@ -50,7 +50,9 @@
       2. `AUTO_SAVE`: Converts silently in background, saves to destination, displays custom One UI style pill toast for **1.0s** (converting) + **1.0s** (complete) at bottom center.
       3. `RE_SHARE`: Converts in background and immediately launches Android system `ShareSheet` (`Intent.createChooser`) for instant forwarding to KakaoTalk, Quick Share, etc.
   - `MainActivity.kt`: Main application screen and document queue management.
-  - `SettingsDialog.kt`: User settings dialog with pen/marker sliders, auto-save destination, notification toggle, and the 3-way `ShareReceiveAction` radio group.
+  - `SettingsDialog.kt`: User settings dialog with pen/marker sliders, auto-save destination, notification toggle, the 3-way `ShareReceiveAction` radio group, and GitHub In-App Self-Update button.
+  - `UpdateManager.kt`: GitHub Releases self-updater (version comparison, background latest release check, APK download with progress, and system package installer launch).
+  - `UpdateDialogs.kt`: Dialogs for update discovery (changelog display) and real-time APK download progress.
   - `rust-core/`: Pure Rust vector rendering engine compiled via `cargo-ndk` to `libsdocx2pdf.so`.
 
 ---
@@ -71,6 +73,7 @@
 - **Branch `feature/background-share`**:
   - Implemented background silent auto-save and instant re-share modes.
   - Configured 1.0s exact toast display duration at bottom center.
+  - Implemented GitHub Releases In-App Self-Update system (Settings check button + auto check on start + download & install).
   - Tested and delivered to user via Telegram.
 - **Pending Action**:
   - Awaiting user's final confirmation to merge `feature/background-share` into `main` and tag Release `v1.1.0`.

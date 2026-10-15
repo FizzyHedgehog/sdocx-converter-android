@@ -141,4 +141,17 @@
     <string name="error_native_not_loaded">Native conversion engine (libsdocx2pdf.so) not loaded.</string>
     <string name="error_unknown">Unknown error</string>
     <string name="folder_saved_success">%1$d files saved to %2$s folder.</string>
+
+    <!-- In-App Self Update -->
+    <string name="check_for_updates">Check for Updates</string>
+    <string name="checking_updates">Checking for updates…</string>
+    <string name="latest_version_toast">You are using the latest version (v%1$s).</string>
+    <string name="update_check_failed">Update check failed. Please check network connection.</string>
+    <string name="update_available_title">New Version Available</string>
+    <string name="update_available_version">Version %1$s is available (Current: %2$s)</string>
+    <string name="btn_update_now">Update Now</string>
+    <string name="btn_update_later">Later</string>
+    <string name="downloading_update">Downloading update…</string>
+    <string name="download_failed">Failed to download update: %1$s</string>
+    <string name="changelog_title">What\'s New</string>
 </resources>

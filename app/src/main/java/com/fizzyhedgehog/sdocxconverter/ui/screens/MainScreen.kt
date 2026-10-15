@@ -27,20 +27,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
 import com.fizzyhedgehog.sdocxconverter.ConversionStatus
 import com.fizzyhedgehog.sdocxconverter.ConverterViewModel
 import com.fizzyhedgehog.sdocxconverter.R
+import com.fizzyhedgehog.sdocxconverter.UpdateInfo
+import com.fizzyhedgehog.sdocxconverter.UpdateManager
 import com.fizzyhedgehog.sdocxconverter.ui.components.AddSourceDialog
 import com.fizzyhedgehog.sdocxconverter.ui.components.BatchSaveDialog
 import com.fizzyhedgehog.sdocxconverter.ui.components.ConvertedPdfCard
 import com.fizzyhedgehog.sdocxconverter.ui.components.DropZone
 import com.fizzyhedgehog.sdocxconverter.ui.components.QueueFileCard
+import com.fizzyhedgehog.sdocxconverter.ui.components.UpdateAvailableDialog
+import com.fizzyhedgehog.sdocxconverter.ui.components.UpdateDownloadingDialog
 import com.fizzyhedgehog.sdocxconverter.ui.components.openPdf
 import com.fizzyhedgehog.sdocxconverter.ui.components.openPdfFolder
 import com.fizzyhedgehog.sdocxconverter.ui.components.shareMultiplePdfs
 import com.fizzyhedgehog.sdocxconverter.ui.components.sharePdf
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SuccessGreen
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +69,23 @@ fun MainScreen(
     var showClearCompletedDialog by remember { mutableStateOf(false) }
     var showDeleteSelectedDialog by remember { mutableStateOf(false) }
     var showAddSourceDialog by remember { mutableStateOf(false) }
+
+    var autoUpdateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+    var isDownloadingAutoUpdate by remember { mutableStateOf(false) }
+    var autoDownloadProgress by remember { mutableStateOf(0f) }
+    var autoDownloadedBytes by remember { mutableStateOf(0L) }
+    var autoTotalBytes by remember { mutableStateOf(0L) }
+    val scope = rememberCoroutineScope()
+
+    // 앱 시작 시 백그라운드에서 조용히 GitHub 최신 버전 확인
+    LaunchedEffect(Unit) {
+        val result = UpdateManager.checkUpdate(context)
+        result.onSuccess { info ->
+            if (info.hasUpdate) {
+                autoUpdateInfo = info
+            }
+        }
+    }
 
     val pendingItems = fileList.filter { it.status != ConversionStatus.COMPLETED }
     val completedItems = fileList.filter { it.status == ConversionStatus.COMPLETED }
@@ -931,6 +954,51 @@ fun MainScreen(
             onDismiss = { showAddSourceDialog = false },
             onSelectFiles = onSelectFilesClick,
             onSelectFolder = onSelectFolderClick
+        )
+    }
+
+    autoUpdateInfo?.let { updateInfo ->
+        UpdateAvailableDialog(
+            updateInfo = updateInfo,
+            onDismiss = { autoUpdateInfo = null },
+            onUpdateClick = {
+                val apkUrl = updateInfo.apkDownloadUrl
+                if (!apkUrl.isNullOrEmpty()) {
+                    isDownloadingAutoUpdate = true
+                    autoDownloadProgress = 0f
+                    scope.launch {
+                        val dlResult = UpdateManager.downloadApk(
+                            context = context,
+                            downloadUrl = apkUrl,
+                            versionName = updateInfo.latestVersion,
+                            onProgress = { p, d, t ->
+                                autoDownloadProgress = p
+                                autoDownloadedBytes = d
+                                autoTotalBytes = t
+                            }
+                        )
+                        isDownloadingAutoUpdate = false
+                        dlResult.onSuccess { apkFile ->
+                            autoUpdateInfo = null
+                            UpdateManager.installApk(context, apkFile)
+                        }.onFailure { err ->
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.download_failed, err.message ?: ""),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    if (isDownloadingAutoUpdate) {
+        UpdateDownloadingDialog(
+            progress = autoDownloadProgress,
+            downloadedBytes = autoDownloadedBytes,
+            totalBytes = autoTotalBytes
         )
     }
 }

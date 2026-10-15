@@ -1,5 +1,6 @@
 package com.fizzyhedgehog.sdocxconverter.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +23,12 @@ import androidx.compose.ui.unit.dp
 import com.fizzyhedgehog.sdocxconverter.ConverterSettings
 import com.fizzyhedgehog.sdocxconverter.R
 import com.fizzyhedgehog.sdocxconverter.ShareReceiveAction
+import com.fizzyhedgehog.sdocxconverter.UpdateInfo
+import com.fizzyhedgehog.sdocxconverter.UpdateManager
+import com.fizzyhedgehog.sdocxconverter.ui.components.UpdateAvailableDialog
+import com.fizzyhedgehog.sdocxconverter.ui.components.UpdateDownloadingDialog
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsDialog(
@@ -31,6 +38,7 @@ fun SettingsDialog(
     onSelectDefaultSaveFolderClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val appVersionName = remember(context) {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -46,6 +54,13 @@ fun SettingsDialog(
     var defaultSaveTreeName by remember { mutableStateOf(currentSettings.defaultSaveTreeName) }
     var notifyOnCompletion by remember { mutableStateOf(currentSettings.notifyOnCompletion) }
     var shareReceiveAction by remember { mutableStateOf(currentSettings.shareReceiveAction) }
+
+    var isCheckingUpdate by remember { mutableStateOf(false) }
+    var availableUpdate by remember { mutableStateOf<UpdateInfo?>(null) }
+    var isDownloadingUpdate by remember { mutableStateOf(false) }
+    var downloadProgress by remember { mutableStateOf(0f) }
+    var downloadedBytes by remember { mutableStateOf(0L) }
+    var totalBytes by remember { mutableStateOf(0L) }
 
     // 외부에서 defaultSaveTreeUri가 갱신되면 동기화
     LaunchedEffect(currentSettings.defaultSaveTreeUri, currentSettings.defaultSaveTreeName) {
@@ -390,13 +405,87 @@ fun SettingsDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = stringResource(R.string.app_version_label, appVersionName),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                )
+                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 6. 버전 정보 및 인앱 업데이트
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.app_version_label, appVersionName),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.check_for_updates),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            if (!isCheckingUpdate && !isDownloadingUpdate) {
+                                isCheckingUpdate = true
+                                scope.launch {
+                                    val result = UpdateManager.checkUpdate(context)
+                                    isCheckingUpdate = false
+                                    result.onSuccess { info ->
+                                        if (info.hasUpdate) {
+                                            availableUpdate = info
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.latest_version_toast, info.currentVersion),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }.onFailure { err ->
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.update_check_failed),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(18.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        if (isCheckingUpdate) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = SamsungOrange
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.checking_updates),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Rounded.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = SamsungOrange
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.check_for_updates),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = SamsungOrange,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -427,4 +516,49 @@ fun SettingsDialog(
             }
         }
     )
+
+    availableUpdate?.let { updateInfo ->
+        UpdateAvailableDialog(
+            updateInfo = updateInfo,
+            onDismiss = { availableUpdate = null },
+            onUpdateClick = {
+                val apkUrl = updateInfo.apkDownloadUrl
+                if (!apkUrl.isNullOrEmpty()) {
+                    isDownloadingUpdate = true
+                    downloadProgress = 0f
+                    scope.launch {
+                        val dlResult = UpdateManager.downloadApk(
+                            context = context,
+                            downloadUrl = apkUrl,
+                            versionName = updateInfo.latestVersion,
+                            onProgress = { p, d, t ->
+                                downloadProgress = p
+                                downloadedBytes = d
+                                totalBytes = t
+                            }
+                        )
+                        isDownloadingUpdate = false
+                        dlResult.onSuccess { apkFile ->
+                            availableUpdate = null
+                            UpdateManager.installApk(context, apkFile)
+                        }.onFailure { err ->
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.download_failed, err.message ?: ""),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    if (isDownloadingUpdate) {
+        UpdateDownloadingDialog(
+            progress = downloadProgress,
+            downloadedBytes = downloadedBytes,
+            totalBytes = totalBytes
+        )
+    }
 }
