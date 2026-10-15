@@ -31,11 +31,13 @@
 3. **Hidden Feature Branch & Release Isolation**:
    - When developing or testing new features, work strictly on isolated feature branches (e.g. `feature/background-share`).
    - Do NOT overwrite public Release v1.0.0 or `main` until the user explicitly tests and approves ("정식 배포해" / "올려줘").
-4. **English Code & Commits**:
-   - All code comments, Git commit messages, and documentation must be written in clear English without emojis.
+4. **English Only for GitHub (No Emojis)**:
+   - All GitHub-facing content without exception (commit messages, PRs, code comments, documentation, and GitHub Release titles/descriptions) **MUST** be written in clear English without any emojis.
 5. **Preserve User Privacy & Terminal Silence**:
    - Keep GitHub profile anonymous (`FizzyHedgehog`).
    - Terminal silence principle: never use audible commands (`afplay`, `say`).
+6. **Clean Public Release Notes (No Developer/Internal Details)**:
+   - When publishing an official public release on `main`, release notes and changelogs **MUST completely exclude** developer-only conveniences, Developer Mode, PIN/password, pre-release channels, or internal testing tools. Only user-facing features (background share, pill toast notifications, UI settings, adaptive icon) may be included.
 
 ---
 
