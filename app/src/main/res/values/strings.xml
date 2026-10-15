@@ -50,8 +50,8 @@
     <!-- Page split settings -->
     <string name="split_mode_label">PDF Page Split Mode</string>
     <string name="split_mode_none">Default (No Split)</string>
-    <string name="split_mode_portrait">A4 Portrait Split</string>
-    <string name="split_mode_landscape">A4 Landscape Split</string>
+    <string name="split_mode_portrait">Portrait Split</string>
+    <string name="split_mode_landscape">Landscape Split</string>
     <string name="auto_split_label">Smart Page Split</string>
     <string name="auto_split_sublabel">Intelligently splits pages based on stroke positions and margins.</string>
 

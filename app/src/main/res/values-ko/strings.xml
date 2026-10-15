@@ -50,8 +50,8 @@
     <!-- 페이지 분할 설정 -->
     <string name="split_mode_label">PDF 페이지 분할 모드</string>
     <string name="split_mode_none">기본 (분할 없음)</string>
-    <string name="split_mode_portrait">A4 세로 분할</string>
-    <string name="split_mode_landscape">A4 가로 분할</string>
+    <string name="split_mode_portrait">세로 분할</string>
+    <string name="split_mode_landscape">가로 분할</string>
     <string name="auto_split_label">지능형 자동 페이지 분할</string>
     <string name="auto_split_sublabel">노트 여백과 획 위치를 분석하여 페이지를 자연스럽게 분할합니다.</string>
 
