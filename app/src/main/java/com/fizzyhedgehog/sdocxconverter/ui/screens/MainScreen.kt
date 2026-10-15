@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.fizzyhedgehog.sdocxconverter.ConversionStatus
 import com.fizzyhedgehog.sdocxconverter.ConverterViewModel
 import com.fizzyhedgehog.sdocxconverter.R
+import com.fizzyhedgehog.sdocxconverter.ui.components.AddSourceDialog
 import com.fizzyhedgehog.sdocxconverter.ui.components.BatchSaveDialog
 import com.fizzyhedgehog.sdocxconverter.ui.components.ConvertedPdfCard
 import com.fizzyhedgehog.sdocxconverter.ui.components.DropZone
@@ -61,6 +62,7 @@ fun MainScreen(
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
     var showClearCompletedDialog by remember { mutableStateOf(false) }
     var showDeleteSelectedDialog by remember { mutableStateOf(false) }
+    var showAddSourceDialog by remember { mutableStateOf(false) }
 
     val pendingItems = fileList.filter { it.status != ConversionStatus.COMPLETED }
     val completedItems = fileList.filter { it.status == ConversionStatus.COMPLETED }
@@ -165,6 +167,7 @@ fun MainScreen(
                         DropZone(
                             onSelectFilesClick = onSelectFilesClick,
                             onSelectFolderClick = onSelectFolderClick,
+                            onCardClick = { showAddSourceDialog = true },
                             isCompact = false,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -214,7 +217,7 @@ fun MainScreen(
                             }
 
                             FloatingActionButton(
-                                onClick = onSelectFilesClick,
+                                onClick = { showAddSourceDialog = true },
                                 shape = CircleShape,
                                 containerColor = SamsungOrange,
                                 contentColor = Color.White,
@@ -225,7 +228,7 @@ fun MainScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Add,
-                                    contentDescription = "파일 추가",
+                                    contentDescription = "파일 또는 폴더 추가",
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
@@ -406,7 +409,14 @@ fun MainScreen(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     OutlinedButton(
-                                        onClick = { showBatchSaveDialog = true },
+                                        onClick = {
+                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                            if (uris.isNotEmpty()) {
+                                                onSaveBatchPdfs(uris)
+                                                isSelectionMode = false
+                                                selectedIds = emptySet()
+                                            }
+                                        },
                                         enabled = selectedIds.isNotEmpty(),
                                         modifier = Modifier.weight(1f),
                                         contentPadding = PaddingValues(vertical = 8.dp)
@@ -531,6 +541,7 @@ fun MainScreen(
                     DropZone(
                         onSelectFilesClick = onSelectFilesClick,
                         onSelectFolderClick = onSelectFolderClick,
+                        onCardClick = { showAddSourceDialog = true },
                         modifier = Modifier.fillMaxWidth().height(180.dp)
                     )
                 }
@@ -550,12 +561,12 @@ fun MainScreen(
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(
-                                    onClick = onSelectFilesClick,
+                                    onClick = { showAddSourceDialog = true },
                                     modifier = Modifier.size(32.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Rounded.Add,
-                                        contentDescription = "파일 추가",
+                                        contentDescription = "파일 또는 폴더 추가",
                                         tint = SamsungOrange
                                     )
                                 }
@@ -729,7 +740,14 @@ fun MainScreen(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         OutlinedButton(
-                                            onClick = { showBatchSaveDialog = true },
+                                            onClick = {
+                                                val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
+                                                if (uris.isNotEmpty()) {
+                                                    onSaveBatchPdfs(uris)
+                                                    isSelectionMode = false
+                                                    selectedIds = emptySet()
+                                                }
+                                            },
                                             enabled = selectedIds.isNotEmpty(),
                                             modifier = Modifier.weight(1f),
                                             contentPadding = PaddingValues(vertical = 6.dp)
@@ -902,6 +920,14 @@ fun MainScreen(
                     Text(stringResource(R.string.btn_dialog_cancel))
                 }
             }
+        )
+    }
+
+    if (showAddSourceDialog) {
+        AddSourceDialog(
+            onDismiss = { showAddSourceDialog = false },
+            onSelectFiles = onSelectFilesClick,
+            onSelectFolder = onSelectFolderClick
         )
     }
 }
