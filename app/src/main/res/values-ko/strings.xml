@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">SDOCX 변환기</string>
     <string name="drop_hint">.sdocx 문서 추가</string>
-    <string name="drop_subhint">여기를 클릭하여 원하는 문서나 폴더를 추가하세요</string>
+    <string name="drop_subhint">여기를 클릭하여 원하는 문서나 폴더를 선택하세요</string>
+    <string name="drop_separate_hint">※ 안드로이드 정책상 파일과 폴더 동시 선택이 불가하므로, 파일과 폴더를 각각 나누어 추가해 주세요.</string>
     <string name="drop_compact_hint">파일 또는 폴더 추가하기</string>
-    <string name="drop_compact_subhint">여기를 클릭하여 원하는 문서나 폴더를 추가하세요</string>
+    <string name="drop_compact_subhint">여기를 클릭하여 원하는 문서나 폴더를 선택하세요</string>
     <string name="btn_select_files_multi">파일 선택 (다중)</string>
     <string name="btn_select_folder">폴더 선택</string>
     <string name="btn_add_files">파일 추가</string>

@@ -2,6 +2,7 @@
     <string name="app_name">SDOCX Converter</string>
     <string name="drop_hint">Add .sdocx Documents</string>
     <string name="drop_subhint">Tap here to select documents or folders to convert</string>
+    <string name="drop_separate_hint">※ Android cannot select files and folders simultaneously; please add files and folders separately.</string>
     <string name="drop_compact_hint">Add Documents or Folders</string>
     <string name="drop_compact_subhint">Tap here to select documents or folders to convert</string>
     <string name="btn_select_files_multi">Select Files (Multi)</string>
