@@ -14,7 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -116,9 +116,11 @@ fun sharePdf(context: Context, uri: Uri, title: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "application/pdf"
             putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, title)
+            putExtra(Intent.EXTRA_TITLE, title)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_title)))
+        context.startActivity(Intent.createChooser(shareIntent, title))
     } catch (e: Exception) {
         Toast.makeText(context, "공유 실패: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
     }
@@ -139,6 +141,8 @@ fun shareMultiplePdfs(context: Context, uris: List<Uri>, title: String = "PDF �
         val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
             type = "application/pdf"
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+            putExtra(Intent.EXTRA_SUBJECT, title)
+            putExtra(Intent.EXTRA_TITLE, title)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
@@ -259,19 +263,56 @@ fun ConvertedPdfCard(
     onShare: () -> Unit,
     onRemoveClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onSavePdf: (() -> Unit)? = null
+    onSavePdf: (() -> Unit)? = null,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {}
 ) {
     val pdfDisplayName = item.outputPdfName ?: (item.name.substringBeforeLast(".") + ".pdf")
     val sizeText = formatFileSize(if (item.outputPdfSizeBytes > 0) item.outputPdfSizeBytes else item.sizeBytes)
     val savedStatusText = if (item.isSavedToDevice) " · 저장됨" else ""
+    var showUnsavedDialog by remember { mutableStateOf(false) }
+
+    if (showUnsavedDialog) {
+        AlertDialog(
+            onDismissRequest = { showUnsavedDialog = false },
+            title = { Text("기기 미저장", fontWeight = FontWeight.Bold) },
+            text = { Text("기기에 저장되어 있지 않습니다. 저장할 위치를 정해주세요.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showUnsavedDialog = false
+                        onSavePdf?.invoke()
+                    }
+                ) {
+                    Text("저장 위치 정하기", color = SamsungOrange, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnsavedDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onOpenPdf() },
+            .clickable {
+                if (isSelectionMode) {
+                    onToggleSelect()
+                } else {
+                    onOpenPdf()
+                }
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isSelectionMode && isSelected) {
+                SamsungOrange.copy(alpha = 0.12f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
     ) {
@@ -281,6 +322,18 @@ fun ConvertedPdfCard(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (isSelectionMode) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelect() },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = SamsungOrange,
+                        checkmarkColor = Color.White
+                    ),
+                    modifier = Modifier.padding(end = 6.dp)
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -331,67 +384,63 @@ fun ConvertedPdfCard(
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onOpenPdf,
-                    modifier = Modifier.size(34.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Visibility,
-                        contentDescription = stringResource(R.string.btn_open_pdf),
-                        tint = SamsungOrange,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                IconButton(
-                    onClick = onOpenFolder,
-                    modifier = Modifier.size(34.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.FolderOpen,
-                        contentDescription = stringResource(R.string.btn_open_folder),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                if (onSavePdf != null) {
+            if (!isSelectionMode) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
-                        onClick = onSavePdf,
+                        onClick = {
+                            if (item.isSavedToDevice) {
+                                onOpenFolder()
+                            } else {
+                                showUnsavedDialog = true
+                            }
+                        },
                         modifier = Modifier.size(34.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.SaveAlt,
-                            contentDescription = stringResource(R.string.btn_save_single),
+                            imageVector = Icons.Rounded.FolderOpen,
+                            contentDescription = stringResource(R.string.btn_open_folder),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    if (onSavePdf != null) {
+                        IconButton(
+                            onClick = onSavePdf,
+                            modifier = Modifier.size(34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.SaveAlt,
+                                contentDescription = stringResource(R.string.btn_save_single),
+                                tint = SamsungOrange,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onShare,
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Share,
+                            contentDescription = stringResource(R.string.btn_share),
                             tint = SamsungOrange,
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                }
 
-                IconButton(
-                    onClick = onShare,
-                    modifier = Modifier.size(34.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Share,
-                        contentDescription = stringResource(R.string.btn_share),
-                        tint = SamsungOrange,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                IconButton(
-                    onClick = onRemoveClick,
-                    modifier = Modifier.size(30.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "삭제",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                    IconButton(
+                        onClick = onRemoveClick,
+                        modifier = Modifier.size(30.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = "삭제",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }

@@ -404,8 +404,8 @@ class ConverterViewModel : ViewModel() {
         val tempInput = File(cacheDir, "input_${item.id}.sdocx")
         val baseName = item.name.substringBeforeLast(".")
         val pdfName = "$baseName.pdf"
-        val pdfDir = File(context.filesDir, "converted_pdfs").apply { mkdirs() }
-        val finalLocalPdf = File(pdfDir, "${item.id}_$pdfName")
+        val itemDir = File(File(context.filesDir, "converted_pdfs"), item.id).apply { mkdirs() }
+        val finalLocalPdf = File(itemDir, pdfName)
 
         try {
             // 1. Content URI -> 임시 로컬 파일 복사
