@@ -1,11 +1,11 @@
-# SDOCX Converter Lite for Android & Galaxy Tab 📱✨
+# SDOCX Converter for Android & Galaxy Tab 📱✨
 
 > **Lossless Vector PDF Converter for Samsung Notes (`.sdocx`)**  
 > 갤럭시 탭(태블릿) 및 갤럭시 스마트폰을 위한 고성능 무손실 벡터 PDF 변환 유틸리티입니다.
 
 ---
 
-## 💎 Why SDOCX Converter Lite on Galaxy?
+## 💎 Why SDOCX Converter on Galaxy?
 
 1. **100% 무손실 벡터(Vector) 렌더링**:
    - 삼성노트 기본 내보내기는 필기 획을 비트맵 이미지로 변환(래스터화)하여 확대하거나 인쇄할 때 글씨가 깨집니다.

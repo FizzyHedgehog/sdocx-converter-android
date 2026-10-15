@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SDOCX Converter Lite</string>
+    <string name="app_name">SDOCX Converter</string>
     <string name="drop_hint">Add .sdocx Files or Folders</string>
     <string name="drop_subhint">Select multiple files, or select a folder to import all .sdocx notes at once</string>
     <string name="drop_compact_hint">Add Files or Folders</string>

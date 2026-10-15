@@ -54,12 +54,12 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p dist
-          find app/build/outputs/apk/ -name "*.apk" -exec cp {} dist/SDOCX_Converter_Lite.apk \;
+          find app/build/outputs/apk/ -name "*.apk" -exec cp {} dist/SDOCX_Converter.apk \;
           ls -la dist/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SDOCX_Converter_Lite_Android_APK
-          path: dist/SDOCX_Converter_Lite.apk
+          name: SDOCX_Converter_Android_APK
+          path: dist/SDOCX_Converter.apk
           if-no-files-found: error

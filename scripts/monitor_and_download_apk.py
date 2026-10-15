@@ -115,7 +115,7 @@ def process_and_send_apk(run_id):
         sys.exit(1)
 
     print("Extracting APK to Desktop...")
-    final_apk = os.path.join(OUTPUT_DIR, "SDOCX_Converter_Lite.apk")
+    final_apk = os.path.join(OUTPUT_DIR, "SDOCX_Converter.apk")
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         for member in zip_ref.namelist():
             if member.endswith(".apk"):
@@ -148,7 +148,7 @@ def process_and_send_apk(run_id):
             "   - 이미 변환 완료된 파일을 다시 선택하면 '이미 변환이 완료된 파일입니다' 알림 팝업이 뜹니다.\n\n"
             "6. 🔔 <b>변환 완료 시 시스템 상단 알림바 지원</b>\n"
             "   - 설정에서 변환 완료 알림을 켜고 끌 수 있으며, 변환 종료 시 상단 알림으로 즉시 안내합니다.\n\n"
-            f"• 파일명: <code>SDOCX_Converter_Lite.apk</code> ({size_mb:.2f} MB)\n\n"
+            f"• 파일명: <code>SDOCX_Converter.apk</code> ({size_mb:.2f} MB)\n\n"
             "아래 첨부된 최신 APK 파일을 다운로드하여 탭에서 바로 확인해보세요!"
         )
 
@@ -159,7 +159,7 @@ def process_and_send_apk(run_id):
             print("Sending APK file to Telegram...")
             doc_sent = notify_telegram.send_telegram_document(
                 final_apk,
-                caption="📱 SDOCX Converter Lite (UI 개선 최신 빌드 APK)"
+                caption="📱 SDOCX Converter (최신 빌드 APK)"
             )
             print(f"Telegram document send result: {doc_sent}")
         return True
