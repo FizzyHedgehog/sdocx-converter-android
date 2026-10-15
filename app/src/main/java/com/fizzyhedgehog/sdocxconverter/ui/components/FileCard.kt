@@ -252,7 +252,8 @@ fun ConvertedPdfCard(
     onOpenFolder: () -> Unit,
     onShare: () -> Unit,
     onRemoveClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSavePdf: (() -> Unit)? = null
 ) {
     val pdfDisplayName = item.outputPdfName ?: (item.name.substringBeforeLast(".") + ".pdf")
     val sizeText = formatFileSize(if (item.outputPdfSizeBytes > 0) item.outputPdfSizeBytes else item.sizeBytes)
@@ -326,7 +327,7 @@ fun ConvertedPdfCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onOpenPdf,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(34.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Visibility,
@@ -338,7 +339,7 @@ fun ConvertedPdfCard(
 
                 IconButton(
                     onClick = onOpenFolder,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(34.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.FolderOpen,
@@ -348,9 +349,23 @@ fun ConvertedPdfCard(
                     )
                 }
 
+                if (onSavePdf != null) {
+                    IconButton(
+                        onClick = onSavePdf,
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.SaveAlt,
+                            contentDescription = stringResource(R.string.btn_save_single),
+                            tint = SamsungOrange,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
                 IconButton(
                     onClick = onShare,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(34.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Share,
@@ -362,7 +377,7 @@ fun ConvertedPdfCard(
 
                 IconButton(
                     onClick = onRemoveClick,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(30.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Close,

@@ -40,7 +40,9 @@ import com.fizzyhedgehog.sdocxconverter.ui.theme.SuccessGreen
 fun MainScreen(
     viewModel: ConverterViewModel,
     onSelectFilesClick: () -> Unit,
-    onSelectFolderClick: () -> Unit
+    onSelectFolderClick: () -> Unit,
+    onSaveSinglePdf: (Uri, String) -> Unit = { _, _ -> },
+    onSaveBatchPdfs: (List<Uri>) -> Unit = {}
 ) {
     val context = LocalContext.current
     val fileList by viewModel.fileList.collectAsState()
@@ -359,6 +361,12 @@ fun MainScreen(
                                     item = item,
                                     onOpenPdf = { item.outputPdfUri?.let { openPdf(context, it) } },
                                     onOpenFolder = { openPdfFolder(context) },
+                                    onSavePdf = {
+                                        item.outputPdfUri?.let { uri ->
+                                            val name = item.outputPdfName ?: (item.name.substringBeforeLast(".") + ".pdf")
+                                            onSaveSinglePdf(uri, name)
+                                        }
+                                    },
                                     onShare = {
                                         item.outputPdfUri?.let {
                                             sharePdf(context, it, item.outputPdfName ?: item.name)
@@ -485,6 +493,12 @@ fun MainScreen(
                             item = item,
                             onOpenPdf = { item.outputPdfUri?.let { openPdf(context, it) } },
                             onOpenFolder = { openPdfFolder(context) },
+                            onSavePdf = {
+                                item.outputPdfUri?.let { uri ->
+                                    val name = item.outputPdfName ?: (item.name.substringBeforeLast(".") + ".pdf")
+                                    onSaveSinglePdf(uri, name)
+                                }
+                            },
                             onShare = {
                                 item.outputPdfUri?.let {
                                     sharePdf(context, it, item.outputPdfName ?: item.name)
@@ -516,6 +530,9 @@ fun MainScreen(
             onDismiss = { showMultiShareDialog = false },
             onShare = { selectedUris ->
                 shareMultiplePdfs(context, selectedUris)
+            },
+            onSaveToFolder = { selectedUris ->
+                onSaveBatchPdfs(selectedUris)
             }
         )
     }

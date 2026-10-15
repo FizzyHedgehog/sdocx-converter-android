@@ -141,6 +141,73 @@ class ConverterViewModel : ViewModel() {
         }
     }
 
+    fun exportSinglePdf(srcUri: Uri, destUri: Uri, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            var success = false
+            try {
+                context.contentResolver.openInputStream(srcUri)?.use { input ->
+                    context.contentResolver.openOutputStream(destUri)?.use { output ->
+                        input.copyTo(output)
+                        success = true
+                    }
+                }
+            } catch (_: Exception) {}
+
+            withContext(Dispatchers.Main) {
+                if (success) {
+                    Toast.makeText(context, context.getString(R.string.save_success_single), Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, context.getString(R.string.save_error), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun exportBatchPdfsToFolder(sourceUris: List<Uri>, targetTreeUri: Uri, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val targetDir = try {
+                DocumentFile.fromTreeUri(context, targetTreeUri)
+            } catch (e: Exception) {
+                null
+            }
+
+            if (targetDir == null || !targetDir.exists()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "대상 폴더를 열 수 없습니다.", Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
+
+            var savedCount = 0
+            for (srcUri in sourceUris) {
+                val item = _fileList.value.find { it.outputPdfUri == srcUri }
+                val fileName = item?.outputPdfName ?: (item?.name?.substringBeforeLast(".")?.plus(".pdf") ?: "document.pdf")
+
+                try {
+                    val targetFile = targetDir.createFile("application/pdf", fileName) ?: continue
+                    context.contentResolver.openInputStream(srcUri)?.use { input ->
+                        context.contentResolver.openOutputStream(targetFile.uri)?.use { output ->
+                            input.copyTo(output)
+                            savedCount++
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+
+            withContext(Dispatchers.Main) {
+                if (savedCount > 0) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.save_success_batch, savedCount),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(context, context.getString(R.string.save_error), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     fun removeFile(id: String) {
         _fileList.value = _fileList.value.filter { it.id != id }
     }

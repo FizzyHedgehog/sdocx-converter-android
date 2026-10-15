@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PictureAsPdf
+import androidx.compose.material.icons.rounded.SaveAlt
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,7 +30,8 @@ import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 fun MultiShareDialog(
     completedItems: List<SdocxFileItem>,
     onDismiss: () -> Unit,
-    onShare: (List<Uri>) -> Unit
+    onShare: (List<Uri>) -> Unit,
+    onSaveToFolder: (List<Uri>) -> Unit
 ) {
     val validItems = remember(completedItems) {
         completedItems.filter { it.outputPdfUri != null }
@@ -201,16 +203,49 @@ fun MultiShareDialog(
                 // 하단 버튼 영역
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .weight(0.38f)
+                            .weight(0.24f)
                             .height(46.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
                         Text("취소")
+                    }
+
+                    FilledTonalButton(
+                        onClick = {
+                            val selectedUris = validItems
+                                .filter { selectedIds.contains(it.id) }
+                                .mapNotNull { it.outputPdfUri }
+                            onSaveToFolder(selectedUris)
+                            onDismiss()
+                        },
+                        enabled = selectedIds.isNotEmpty(),
+                        modifier = Modifier
+                            .weight(0.38f)
+                            .height(46.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = SamsungOrange.copy(alpha = 0.15f),
+                            contentColor = SamsungOrange
+                        ),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.SaveAlt,
+                            contentDescription = null,
+                            modifier = Modifier.size(17.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.btn_save_to_files),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
 
                     Button(
@@ -223,22 +258,24 @@ fun MultiShareDialog(
                         },
                         enabled = selectedIds.isNotEmpty(),
                         modifier = Modifier
-                            .weight(0.62f)
+                            .weight(0.38f)
                             .height(46.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = SamsungOrange
-                        )
+                        ),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Share,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(17.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "${selectedIds.size}개 파일 공유",
-                            fontWeight = FontWeight.Bold
+                            text = "${selectedIds.size}개 공유",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
                 }

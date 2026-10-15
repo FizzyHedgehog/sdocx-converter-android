@@ -17,6 +17,9 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: ConverterViewModel by viewModels()
 
+    private var pendingSinglePdfSourceUri: Uri? = null
+    private var pendingBatchSourceUris: List<Uri> = emptyList()
+
     private val selectFilesLauncher = registerForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris: List<Uri> ->
@@ -39,6 +42,32 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val createDocumentLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/pdf")
+    ) { destUri: Uri? ->
+        val srcUri = pendingSinglePdfSourceUri
+        if (destUri != null && srcUri != null) {
+            viewModel.exportSinglePdf(srcUri, destUri, this)
+        }
+        pendingSinglePdfSourceUri = null
+    }
+
+    private val exportBatchFolderLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { treeUri: Uri? ->
+        val sourceUris = pendingBatchSourceUris
+        if (treeUri != null && sourceUris.isNotEmpty()) {
+            try {
+                contentResolver.takePersistableUriPermission(
+                    treeUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            viewModel.exportBatchPdfsToFolder(sourceUris, treeUri, this)
+        }
+        pendingBatchSourceUris = emptyList()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -55,6 +84,14 @@ class MainActivity : ComponentActivity() {
                     },
                     onSelectFolderClick = {
                         selectFolderLauncher.launch(null)
+                    },
+                    onSaveSinglePdf = { srcUri, fileName ->
+                        pendingSinglePdfSourceUri = srcUri
+                        createDocumentLauncher.launch(fileName)
+                    },
+                    onSaveBatchPdfs = { uris ->
+                        pendingBatchSourceUris = uris
+                        exportBatchFolderLauncher.launch(null)
                     }
                 )
             }
