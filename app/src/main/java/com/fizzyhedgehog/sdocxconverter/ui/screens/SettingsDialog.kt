@@ -158,7 +158,7 @@ fun SettingsDialog(
                             Spacer(modifier = Modifier.height(4.dp))
                             val defaultFolderFallback = stringResource(R.string.specified_folder)
                             val currentFolderText = if (defaultSaveTreeUri != null) {
-                                "📂 ${defaultSaveTreeName ?: defaultFolderFallback}"
+                                defaultSaveTreeName ?: defaultFolderFallback
                             } else {
                                 stringResource(R.string.downloads_folder_label)
                             }

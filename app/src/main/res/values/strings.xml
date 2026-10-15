@@ -109,7 +109,7 @@
 
     <!-- Settings dialog extra -->
     <string name="specified_folder">Specified Folder</string>
-    <string name="downloads_folder_label">📥 Downloads Folder (My Files > Downloads)</string>
+    <string name="downloads_folder_label">Downloads Folder (My Files > Downloads)</string>
     <string name="btn_select_another_folder">Select Another Folder…</string>
     <string name="saf_downloads_warning">Due to Android security policies, selecting the root Downloads folder directly in the system picker is restricted. To save to Downloads, please use the default Downloads option.</string>
 
