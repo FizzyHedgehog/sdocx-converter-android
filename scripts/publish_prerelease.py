@@ -271,40 +271,51 @@ def main():
     latest_tag, dev_tag = verify_releases()
 
     # 사용자 지침 준수: 맥북 로컬 파일 즉시 삭제
-    if os.path.exists(apk_path):
-        os.remove(apk_path)
-    print("Cleaned up temporary APK from MacBook.")
-
     full_msg = (
-        "🔐 <b>[개발자 모드 암호 표기 변경 및 Pre-release 등록 완료]</b>\n\n"
-        "요청하신 대로 타인이 비밀번호 자릿수를 유추하여 시도할 수 없도록, <b>'PIN(4자리)' 문구를 삭제하고 일반 '암호'로 변경</b>했습니다.\n\n"
-        "🛡️ <b>보안 변경 사항:</b>\n"
-        "• <b>다이얼로그 타이틀</b>: <i>'암호 입력'</i>\n"
-        "• <b>안내 문구</b>: <i>'개발자 모드를 활성화하려면 암호를 입력하세요.'</i>\n"
-        "• <b>입력 필드 레이블</b>: <i>'암호'</i> (기존 PIN 4자리 힌트 전면 제거)\n"
-        "• <b>자릿수 제한 해제</b>: 4글자 입력 제한을 없애 비밀번호 길이 유추를 차단 (실제 암호: <b>3208</b> 동일)\n\n"
-        "🏷️ <b>GitHub Pre-release(사전 출시) 등록 현황:</b>\n"
-        f"• <b>일반 사용자 조회(/releases/latest)</b>: 정식 <code>{latest_tag}</code> 유지 (노출 0%)\n"
-        f"• <b>개발자 채널 조회(/releases)</b>: 최신 <code>{dev_tag}</code> 감지\n"
-        f"• 릴리즈 에셋: <code>{tag_name}</code> (SDOCX_Converter.apk, {apk_size_mb:.2f} MB)\n\n"
-        "📲 <b>업데이트 테스트:</b>\n"
-        "갤탭의 SDOCX Converter [설정] > [개발자 옵션] 확인 후 [업데이트 확인]을 누르시면 지금 등록된 최신 사전 출시 버전으로 즉시 업데이트됩니다!"
+        "⚠️ <b>[설치 실패(패키지 충돌) 원인 및 영구 해결 안내]</b>\n\n"
+        "보내주신 캡처 화면의 <b>'패키지가 기존 패키지와 충돌하여 앱이 설치되지 않았습니다'</b> 오류의 정확한 원인과 영구 조치 사항을 안내드립니다.\n\n"
+        "🔍 <b>발생 원인:</b>\n"
+        "• 안드로이드 OS는 악의적인 앱 변조를 막기 위해, 앱을 업데이트할 때 <b>'기존 설치된 앱의 서명 키'</b>와 <b>'새 APK의 서명 키'</b>가 100% 일치해야만 설치를 허용합니다.\n"
+        "• 기존에는 고정된 키스토어 파일 없이 GitHub Actions 클라우드 러너의 임시 <code>debug</code> 키로 서명되고 있었습니다.\n"
+        "• 이로 인해 CI 러너가 새로 뜰 때마다 <b>매번 다른 임시 서명 키</b>가 생성되어, 기기에 이미 설치된 이전 빌드의 서명 키와 불일치(Signature Mismatch)하여 시스템이 설치를 차단한 것입니다.\n\n"
+        "🛠️ <b>영구 해결 조치 완료:</b>\n"
+        "1. <b>고정 영구 서명 키(Keystore) 생성</b>:\n"
+        "   • 유효기간 10,000일(~2054년)의 전용 서명 키(<code>app/keystore.jks</code>)를 생성하고 <code>build.gradle.kts</code>에 영구 릴리즈 서명으로 등록했습니다.\n"
+        "2. <b>모든 향후 빌드의 서명 통일</b>:\n"
+        "   • 앞으로 GitHub Actions에서 빌드되는 모든 APK와 GitHub Releases는 <b>단 하나의 고정된 서명 키</b>로 서명됩니다.\n\n"
+        "📲 <b>사용자 조치 방법 (딱 한 번만 필요):</b>\n"
+        "1. 현재 갤탭에 깔려 있는 기존 SDOCX Converter 앱을 <b>길게 눌러 [설치 삭제]</b>해 주세요. (설정값은 안전하게 재적용 가능)\n"
+        "2. 아래 텔레그램으로 바로 보내드리는 <b>새 영구 서명 키가 적용된 APK</b>를 설치해 주세요.\n"
+        "3. <b>이후부터는 영구히 앱을 삭제할 필요 없이, 인앱 업데이트 버튼 클릭 한 번으로 모든 버전이 매끄럽게 자동 갱신됩니다!</b>\n\n"
+        f"• 릴리즈 에셋: <code>{tag_name}</code> (SDOCX_Converter.apk, {apk_size_mb:.2f} MB)"
     )
 
     summary_msg = (
-        "1. PIN(4자리) 힌트와 4자리 입력 제한을 제거하고 일반 '암호' 입력창으로 변경하여 보안을 강화했습니다. (암호: 3208 동일)\n"
-        f"2. 변경 사항이 반영된 최신 빌드가 GitHub Pre-release({tag_name})에 등록되었습니다. (공개 릴리즈 {latest_tag} 격리 유지)\n"
-        "3. 갤탭 앱의 [설정] > [업데이트 확인]을 통해 지금 바로 무중단 원터치 업데이트를 테스트해 보실 수 있습니다."
+        "1. 원인: CI 서버가 매번 새로 뜰 때마다 임시 서명 키가 달라져 안드로이드 OS가 서명 불일치로 설치를 차단한 것입니다.\n"
+        "2. 조치: 10,000일 유효의 고정 영구 서명 키(keystore.jks)를 프로젝트에 영구 적용하여 향후 모든 빌드의 서명을 통일했습니다.\n"
+        "3. 해결: 기존 앱을 딱 1회 삭제 후 아래 첨부된 새 APK를 설치하시면, 이후부터는 패키지 충돌 없이 원터치 인앱 업데이트가 완벽 작동합니다."
     )
 
     if notify_telegram:
-        print("Sending completion report to Telegram (reply_to=310)...")
+        print("Sending completion report to Telegram (reply_to=325)...")
         notify_telegram.send_full_and_summary(
             full_content=full_msg,
             summary_content=summary_msg,
             platform="android",
-            reply_to_message_id=310
+            reply_to_message_id=325
         )
+
+        print("Sending APK file to Telegram...")
+        notify_telegram.send_telegram_document(
+            apk_path,
+            caption="📱 SDOCX Converter v1.1.0-preview (영구 서명 키 적용 신규 APK)",
+            platform="android"
+        )
+
+    # 사용자 지침 준수: 맥북 로컬 파일 즉시 삭제
+    if os.path.exists(apk_path):
+        os.remove(apk_path)
+    print("Cleaned up temporary APK from MacBook.")
     print("Done!")
 
 if __name__ == "__main__":
