@@ -47,7 +47,7 @@
   - `ShareHandlerActivity.kt`: Pure transparent activity (`Theme.Transparent`) intercepting `ACTION_SEND` and `ACTION_SEND_MULTIPLE`.
     - Handles 3 modes based on user settings:
       1. `OPEN_APP`: Forwards intent to `MainActivity` with no UI delay.
-      2. `AUTO_SAVE`: Converts silently in background, saves to destination, displays custom One UI style pill toast for **0.5s** (converting) + **0.5s** (complete) at bottom center.
+      2. `AUTO_SAVE`: Converts silently in background, saves to destination, displays custom One UI style pill toast for **1.0s** (converting) + **1.0s** (complete) at bottom center.
       3. `RE_SHARE`: Converts in background and immediately launches Android system `ShareSheet` (`Intent.createChooser`) for instant forwarding to KakaoTalk, Quick Share, etc.
   - `MainActivity.kt`: Main application screen and document queue management.
   - `SettingsDialog.kt`: User settings dialog with pen/marker sliders, auto-save destination, notification toggle, and the 3-way `ShareReceiveAction` radio group.
@@ -70,7 +70,7 @@
 
 - **Branch `feature/background-share`**:
   - Implemented background silent auto-save and instant re-share modes.
-  - Configured 0.5s exact toast display duration at bottom center.
+  - Configured 1.0s exact toast display duration at bottom center.
   - Tested and delivered to user via Telegram.
 - **Pending Action**:
   - Awaiting user's final confirmation to merge `feature/background-share` into `main` and tag Release `v1.1.0`.

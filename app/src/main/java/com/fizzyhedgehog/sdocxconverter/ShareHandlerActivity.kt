@@ -133,9 +133,9 @@ class ShareHandlerActivity : ComponentActivity() {
         val toastMessage = mutableStateOf<String?>(getString(R.string.toast_background_converting))
         setupToastUi(toastMessage)
 
-        // 1차 '변환 중' 알림은 정확히 500ms(0.5초) 동안만 표시된 후 사라지도록 자동 종료 타이머 설정
+        // 1차 '변환 중' 알림은 정확히 1000ms(1초) 동안만 표시된 후 사라지도록 자동 종료 타이머 설정
         val dismissConvertingJob = lifecycleScope.launch(Dispatchers.Main) {
-            delay(500)
+            delay(1000)
             if (toastMessage.value == getString(R.string.toast_background_converting)) {
                 toastMessage.value = null
             }
@@ -164,10 +164,10 @@ class ShareHandlerActivity : ComponentActivity() {
                 }
             }
 
-            // 변환이 500ms보다 빨리 끝난 경우, 1차 '변환 중' 알림이 500ms 동안은 보이도록 최소 표시 시간 보장
+            // 변환이 1000ms보다 빨리 끝난 경우, 1차 '변환 중' 알림이 1초 동안은 보이도록 최소 표시 시간 보장
             val elapsed = System.currentTimeMillis() - startTime
-            if (elapsed < 500) {
-                delay(500 - elapsed)
+            if (elapsed < 1000) {
+                delay(1000 - elapsed)
             }
             dismissConvertingJob.cancel()
 
@@ -184,14 +184,14 @@ class ShareHandlerActivity : ComponentActivity() {
                         ConversionHelper.sendCompletionNotification(this@ShareHandlerActivity, successCount, lastName)
                     }
 
-                    // 사용자 지침: 2차 '저장 완료' 알림 정확히 0.5초(500ms) 유지 후 종료
-                    delay(500)
+                    // 사용자 지침: 2차 '저장 완료' 알림 정확히 1초(1000ms) 유지 후 종료
+                    delay(1000)
                     toastMessage.value = null
                     delay(100)
                 } else {
                     val errMsg = lastError ?: getString(R.string.status_error)
                     toastMessage.value = getString(R.string.toast_background_convert_error, errMsg)
-                    delay(500)
+                    delay(1000)
                     toastMessage.value = null
                     delay(100)
                 }
@@ -204,9 +204,9 @@ class ShareHandlerActivity : ComponentActivity() {
         val toastMessage = mutableStateOf<String?>(getString(R.string.toast_background_converting))
         setupToastUi(toastMessage)
 
-        // 1차 '변환 중' 알림은 정확히 500ms(0.5초) 동안만 표시된 후 사라지도록 자동 종료 타이머 설정
+        // 1차 '변환 중' 알림은 정확히 1000ms(1초) 동안만 표시된 후 사라지도록 자동 종료 타이머 설정
         val dismissConvertingJob = lifecycleScope.launch(Dispatchers.Main) {
-            delay(500)
+            delay(1000)
             if (toastMessage.value == getString(R.string.toast_background_converting)) {
                 toastMessage.value = null
             }
@@ -233,10 +233,10 @@ class ShareHandlerActivity : ComponentActivity() {
                 }
             }
 
-            // 변환이 500ms보다 빨리 끝난 경우, 1차 '변환 중' 알림이 500ms 동안은 보이도록 최소 표시 시간 보장
+            // 변환이 1000ms보다 빨리 끝난 경우, 1차 '변환 중' 알림이 1초 동안은 보이도록 최소 표시 시간 보장
             val elapsed = System.currentTimeMillis() - startTime
-            if (elapsed < 500) {
-                delay(500 - elapsed)
+            if (elapsed < 1000) {
+                delay(1000 - elapsed)
             }
             dismissConvertingJob.cancel()
 
@@ -268,7 +268,7 @@ class ShareHandlerActivity : ComponentActivity() {
                 } else {
                     val errMsg = lastError ?: getString(R.string.status_error)
                     toastMessage.value = getString(R.string.toast_background_convert_error, errMsg)
-                    delay(500)
+                    delay(1000)
                     toastMessage.value = null
                     delay(100)
                 }
