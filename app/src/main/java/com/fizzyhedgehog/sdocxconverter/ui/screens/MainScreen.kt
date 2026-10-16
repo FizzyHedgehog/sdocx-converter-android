@@ -82,7 +82,7 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         val currentSettings = ConversionHelper.loadSettings(context)
         if (currentSettings.autoCheckUpdate) {
-            val result = UpdateManager.checkUpdate(context)
+            val result = UpdateManager.checkUpdate(context, bypassVersionCheck = false)
             result.onSuccess { info ->
                 if (info.hasUpdate) {
                     autoUpdateInfo = info

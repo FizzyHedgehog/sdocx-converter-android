@@ -224,6 +224,10 @@ object UpdateManager {
      * Launch the Android Package Installer to install the downloaded APK.
      */
     fun installApk(context: Context, apkFile: File) {
+        val prefs = context.getSharedPreferences(ConversionHelper.PREFS_NAME, Context.MODE_PRIVATE)
+        if (prefs.getBoolean("dev_bypass_version_check", false)) {
+            prefs.edit().putBoolean("dev_bypass_version_check", false).apply()
+        }
         val apkUri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",

@@ -421,26 +421,10 @@ fun SettingsDialog(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // 5. 오픈소스 및 저작권 정보
-                Text(
-                    text = stringResource(R.string.title_about),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.license_notice),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // 6. 소프트웨어 업데이트 (Software Update)
+                // 5. 소프트웨어 업데이트 (Software Update)
                 Text(
                     text = stringResource(R.string.section_software_update),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(10.dp))
@@ -501,7 +485,7 @@ fun SettingsDialog(
                             ) {
                                 Text(
                                     text = stringResource(R.string.current_version_format, appVersionName),
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 if (availableUpdate != null) {
@@ -515,7 +499,7 @@ fun SettingsDialog(
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            Button(
+                            OutlinedButton(
                                 onClick = {
                                     if (!isCheckingUpdate && !isDownloadingUpdate) {
                                         isCheckingUpdate = true
@@ -542,12 +526,8 @@ fun SettingsDialog(
                                         }
                                     }
                                 },
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                ),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                                shape = RoundedCornerShape(18.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 if (isCheckingUpdate) {
                                     CircularProgressIndicator(
@@ -561,9 +541,17 @@ fun SettingsDialog(
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 } else {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Refresh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = SamsungOrange
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = stringResource(R.string.check_for_updates),
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = SamsungOrange,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -608,6 +596,23 @@ fun SettingsDialog(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 6. 오픈소스 및 저작권 정보
+                Text(
+                    text = stringResource(R.string.title_about),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.license_notice),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
                 if (developerModeEnabled) {
                     Spacer(modifier = Modifier.height(18.dp))
