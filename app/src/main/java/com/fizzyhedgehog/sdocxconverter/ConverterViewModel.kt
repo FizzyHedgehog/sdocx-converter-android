@@ -39,33 +39,12 @@ class ConverterViewModel : ViewModel() {
     val isConverting: StateFlow<Boolean> = _isConverting.asStateFlow()
 
     fun initSettings(context: Context) {
-        val prefs = context.getSharedPreferences("sdocx_converter_prefs", Context.MODE_PRIVATE)
-        _settings.value = ConverterSettings(
-            penScale = prefs.getFloat("pen_scale", 1.5f).toDouble(),
-            markerScale = prefs.getFloat("marker_scale", 1.0f).toDouble(),
-            splitOption = prefs.getString("split_option", "") ?: "",
-            autoSplit = prefs.getBoolean("auto_split", false),
-            autoSave = prefs.getBoolean("auto_save", false),
-            defaultSaveTreeUri = prefs.getString("default_save_tree_uri", null),
-            defaultSaveTreeName = prefs.getString("default_save_tree_name", null),
-            notifyOnCompletion = prefs.getBoolean("notify_on_completion", true)
-        )
+        _settings.value = ConversionHelper.loadSettings(context)
     }
 
     fun updateSettings(context: Context, newSettings: ConverterSettings) {
         _settings.value = newSettings
-        val prefs = context.getSharedPreferences("sdocx_converter_prefs", Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            putFloat("pen_scale", newSettings.penScale.toFloat())
-            putFloat("marker_scale", newSettings.markerScale.toFloat())
-            putString("split_option", newSettings.splitOption)
-            putBoolean("auto_split", newSettings.autoSplit)
-            putBoolean("auto_save", newSettings.autoSave)
-            putString("default_save_tree_uri", newSettings.defaultSaveTreeUri)
-            putString("default_save_tree_name", newSettings.defaultSaveTreeName)
-            putBoolean("notify_on_completion", newSettings.notifyOnCompletion)
-            apply()
-        }
+        ConversionHelper.saveSettings(context, newSettings)
     }
 
     fun updateSettings(newSettings: ConverterSettings) {
@@ -414,7 +393,14 @@ class ConverterViewModel : ViewModel() {
                 updateItemStatus(item.id, ConversionStatus.CONVERTING)
 
                 val result = withContext(Dispatchers.IO) {
-                    processConversion(item, currentSettings, context)
+                    ConversionHelper.convertSdocxToPdf(
+                        context = context,
+                        uri = item.uri,
+                        originalName = item.name,
+                        settings = currentSettings,
+                        parentFolderTreeUri = item.parentFolderTreeUri,
+                        forceAutoSave = currentSettings.autoSave
+                    )
                 }
 
                 if (result.success) {
@@ -422,7 +408,7 @@ class ConverterViewModel : ViewModel() {
                     lastName = result.pdfName
                     updateItemCompleted(
                         id = item.id,
-                        outputUri = result.uri,
+                        outputUri = result.fileProviderUri,
                         outputName = result.pdfName,
                         outputSize = result.pdfSizeBytes,
                         isSaved = result.isSavedToDevice,
@@ -444,216 +430,11 @@ class ConverterViewModel : ViewModel() {
                     ).show()
 
                     if (currentSettings.notifyOnCompletion) {
-                        sendCompletionNotification(context, successCount, lastName)
+                        ConversionHelper.sendCompletionNotification(context, successCount, lastName)
                     }
                 }
             }
         }
-    }
-
-    private data class ConversionResult(
-        val success: Boolean,
-        val uri: Uri? = null,
-        val pdfName: String = "",
-        val pdfSizeBytes: Long = 0L,
-        val errorMessage: String? = null,
-        val isSavedToDevice: Boolean = false,
-        val savedDeviceUri: Uri? = null
-    )
-
-    private fun processConversion(
-        item: SdocxFileItem,
-        settings: ConverterSettings,
-        context: Context
-    ): ConversionResult {
-        val cacheDir = context.cacheDir
-        val tempInput = File(cacheDir, "input_${item.id}.sdocx")
-        val baseName = item.name.substringBeforeLast(".")
-        val pdfName = "$baseName.pdf"
-        val itemDir = File(File(context.filesDir, "converted_pdfs"), item.id).apply { mkdirs() }
-        val finalLocalPdf = File(itemDir, pdfName)
-
-        try {
-            // 1. Content URI -> 임시 로컬 파일 복사
-            context.contentResolver.openInputStream(item.uri)?.use { input ->
-                FileOutputStream(tempInput).use { output ->
-                    input.copyTo(output)
-                }
-            } ?: return ConversionResult(false, null, pdfName, 0L, context.getString(R.string.error_read_failed))
-
-            // 2. Native Rust 변환 엔진 호출
-            if (NativeConverter.isNativeAvailable()) {
-                val exitCode = NativeConverter.convertNative(
-                    inputPath = tempInput.absolutePath,
-                    outputPath = finalLocalPdf.absolutePath,
-                    penScale = settings.penScale,
-                    markerScale = settings.markerScale,
-                    splitOption = settings.splitOption,
-                    autoSplit = settings.autoSplit
-                )
-                if (exitCode != 0 || !finalLocalPdf.exists()) {
-                    return ConversionResult(false, null, pdfName, 0L, context.getString(R.string.error_native_engine, exitCode))
-                }
-            } else {
-                return ConversionResult(false, null, pdfName, 0L, context.getString(R.string.error_native_not_loaded))
-            }
-
-            tempInput.delete()
-
-            // 3. FileProvider를 통한 앱 격리 Content URI 생성 (어떤 PDF 뷰어/공유 앱에서도 바로 열림)
-            val fileProviderUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                finalLocalPdf
-            )
-            val pdfSizeBytes = finalLocalPdf.length()
-
-            var isSaved = false
-            var deviceUri: Uri? = null
-
-            // 4. 설정에 따른 기기 영구 저장 처리 (기본 설정은 기기 저장 안함)
-            if (settings.autoSave) {
-                // Case A: 원본 파일이 폴더(SAF Tree)에서 온 경우, 그 원본 폴더에 바로 저장!
-                if (item.parentFolderTreeUri != null) {
-                    try {
-                        val parentDoc = DocumentFile.fromTreeUri(context, item.parentFolderTreeUri)
-                        val targetDoc = parentDoc?.createFile("application/pdf", pdfName)
-                        if (targetDoc != null) {
-                            context.contentResolver.openOutputStream(targetDoc.uri)?.use { out ->
-                                finalLocalPdf.inputStream().use { inp -> inp.copyTo(out) }
-                            }
-                            isSaved = true
-                            deviceUri = targetDoc.uri
-                        }
-                    } catch (_: Exception) {}
-                }
-
-                // Case B: 사용자가 설정에서 지정한 기본 저장 폴더가 있는 경우
-                if (!isSaved && settings.defaultSaveTreeUri != null) {
-                    try {
-                        val targetTree = DocumentFile.fromTreeUri(context, Uri.parse(settings.defaultSaveTreeUri))
-                        val targetDoc = targetTree?.createFile("application/pdf", pdfName)
-                        if (targetDoc != null) {
-                            context.contentResolver.openOutputStream(targetDoc.uri)?.use { out ->
-                                finalLocalPdf.inputStream().use { inp -> inp.copyTo(out) }
-                            }
-                            isSaved = true
-                            deviceUri = targetDoc.uri
-                        }
-                    } catch (_: Exception) {}
-                }
-
-                // Case C: 폴더 미지정 시 기본 다운로드 폴더 저장
-                if (!isSaved) {
-                    deviceUri = savePdfToDownloads(context, finalLocalPdf, pdfName)
-                    isSaved = (deviceUri != null)
-                }
-            }
-
-            return ConversionResult(
-                success = true,
-                uri = fileProviderUri,
-                pdfName = pdfName,
-                pdfSizeBytes = pdfSizeBytes,
-                isSavedToDevice = isSaved,
-                savedDeviceUri = deviceUri
-            )
-        } catch (e: Exception) {
-            tempInput.delete()
-            return ConversionResult(false, null, pdfName, 0L, e.localizedMessage ?: context.getString(R.string.error_unknown))
-        }
-    }
-
-    private fun savePdfToDownloads(context: Context, srcFile: File, displayName: String): Uri? {
-        try {
-            val resolver = context.contentResolver
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-                put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                    put(MediaStore.MediaColumns.IS_PENDING, 1)
-                }
-            }
-
-            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-            if (uri != null) {
-                resolver.openOutputStream(uri)?.use { out ->
-                    srcFile.inputStream().use { inp ->
-                        inp.copyTo(out)
-                    }
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    contentValues.clear()
-                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    resolver.update(uri, contentValues, null, null)
-                }
-                return uri
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        // Fallback: 공용 Download 디렉토리 직접 파일 복사 시도
-        try {
-            val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            if (downloadDir.exists() || downloadDir.mkdirs()) {
-                val destFile = File(downloadDir, displayName)
-                srcFile.copyTo(destFile, overwrite = true)
-                return Uri.fromFile(destFile)
-            }
-        } catch (_: Exception) {}
-
-        return null
-    }
-
-    private fun createNotificationChannel(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = context.getString(R.string.notification_channel_name)
-            val channel = NotificationChannel(
-                "sdocx_conversion_channel",
-                name,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = context.getString(R.string.notify_sublabel)
-                enableVibration(true)
-            }
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-            manager?.createNotificationChannel(channel)
-        }
-    }
-
-    private fun sendCompletionNotification(context: Context, completedCount: Int, singleName: String?) {
-        try {
-            createNotificationChannel(context)
-
-            val openIntent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                0,
-                openIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-            val body = if (completedCount == 1 && singleName != null) {
-                context.getString(R.string.notification_single_body, singleName)
-            } else {
-                context.getString(R.string.notification_multi_body, completedCount)
-            }
-
-            val builder = NotificationCompat.Builder(context, "sdocx_conversion_channel")
-                .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                .setContentTitle(context.getString(R.string.app_name))
-                .setContentText(body)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-
-            NotificationManagerCompat.from(context).notify(1001, builder.build())
-        } catch (_: Exception) {}
     }
 
     private fun updateItemStatus(id: String, status: ConversionStatus) {

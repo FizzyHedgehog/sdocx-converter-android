@@ -12,12 +12,21 @@ android {
         applicationId = "com.fizzyhedgehog.sdocxconverter"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters.addAll(listOf("arm64-v8a"))
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("keystore.jks")
+            storePassword = "***REMOVED***"
+            keyAlias = "sdocx"
+            keyPassword = "***REMOVED***"
         }
     }
 
@@ -29,7 +38,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

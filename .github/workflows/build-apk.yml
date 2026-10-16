@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, "feature/**" ]
   workflow_dispatch:
 
 jobs:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Java 17
         uses: actions/setup-java@v4

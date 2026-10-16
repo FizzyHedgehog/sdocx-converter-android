@@ -25,6 +25,18 @@ data class SdocxFileItem(
     val savedDeviceUri: Uri? = null
 )
 
+enum class ShareReceiveAction(val key: String) {
+    OPEN_APP("open_app"),
+    AUTO_SAVE("auto_save"),
+    RE_SHARE("re_share");
+
+    companion object {
+        fun fromKey(key: String?): ShareReceiveAction {
+            return entries.firstOrNull { it.key == key } ?: OPEN_APP
+        }
+    }
+}
+
 data class ConverterSettings(
     val penScale: Double = 1.5,
     val markerScale: Double = 1.0,
@@ -33,7 +45,9 @@ data class ConverterSettings(
     val autoSave: Boolean = false,
     val defaultSaveTreeUri: String? = null,
     val defaultSaveTreeName: String? = null,
-    val notifyOnCompletion: Boolean = true
+    val notifyOnCompletion: Boolean = true,
+    val shareReceiveAction: ShareReceiveAction = ShareReceiveAction.OPEN_APP,
+    val autoCheckUpdate: Boolean = true
 )
 
 object NativeConverter {

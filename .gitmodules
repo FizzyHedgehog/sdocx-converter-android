@@ -1,0 +1,3 @@
+[submodule "rust-core/sdocx2pdf"]
+	path = rust-core/sdocx2pdf
+	url = https://github.com/FizzyHedgehog/sdocx2pdf.git
