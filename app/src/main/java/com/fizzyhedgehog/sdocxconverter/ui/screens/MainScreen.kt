@@ -77,12 +77,15 @@ fun MainScreen(
     var autoTotalBytes by remember { mutableStateOf(0L) }
     val scope = rememberCoroutineScope()
 
-    // 앱 시작 시 백그라운드에서 조용히 GitHub 최신 버전 확인
+    // 앱 시작 시 설정이 켜져 있는 경우에만 백그라운드에서 조용히 GitHub 최신 버전 확인
     LaunchedEffect(Unit) {
-        val result = UpdateManager.checkUpdate(context)
-        result.onSuccess { info ->
-            if (info.hasUpdate) {
-                autoUpdateInfo = info
+        val currentSettings = ConversionHelper.loadSettings(context)
+        if (currentSettings.autoCheckUpdate) {
+            val result = UpdateManager.checkUpdate(context)
+            result.onSuccess { info ->
+                if (info.hasUpdate) {
+                    autoUpdateInfo = info
+                }
             }
         }
     }
