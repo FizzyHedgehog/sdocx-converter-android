@@ -46,7 +46,8 @@ object ConversionHelper {
             defaultSaveTreeUri = prefs.getString("default_save_tree_uri", null),
             defaultSaveTreeName = prefs.getString("default_save_tree_name", null),
             notifyOnCompletion = prefs.getBoolean("notify_on_completion", true),
-            shareReceiveAction = ShareReceiveAction.fromKey(prefs.getString("share_receive_action", ShareReceiveAction.OPEN_APP.key))
+            shareReceiveAction = ShareReceiveAction.fromKey(prefs.getString("share_receive_action", ShareReceiveAction.OPEN_APP.key)),
+            autoCheckUpdate = prefs.getBoolean("auto_check_update", true)
         )
     }
 
@@ -62,6 +63,7 @@ object ConversionHelper {
             putString("default_save_tree_name", newSettings.defaultSaveTreeName)
             putBoolean("notify_on_completion", newSettings.notifyOnCompletion)
             putString("share_receive_action", newSettings.shareReceiveAction.key)
+            putBoolean("auto_check_update", newSettings.autoCheckUpdate)
             apply()
         }
     }

@@ -55,8 +55,20 @@ By directly parsing the native `.sdocx` container, all S Pen handwriting, marker
 
 1. Download the latest **`SDOCX_Converter.apk`** from the [Releases](https://github.com/FizzyHedgehog/sdocx-converter-android/releases) page.
 2. Open the downloaded APK on your device to install.
-   - *Note*: As this is an open-source application distributed outside the Google Play Store, Android will display an "Install unknown apps" prompt. Enable permission for your browser or file manager to proceed.
+   - **Install Unknown Apps**: Because this open-source application is distributed outside Google Play, Android will prompt for permission to install unknown apps. Enable permission for your browser or file manager to proceed.
+   - **Google Play Protect Notice**: If Google Play Protect displays a warning stating *"Unrecognized developer"* or *"Blocked by Play Protect"*, tap **More details** and select **Install anyway**. This is standard Android security verification for community-signed open-source applications.
 3. Launch the app and import your `.sdocx` files to begin converting.
+
+---
+
+## Updating
+
+SDOCX Converter supports seamless in-app self-updating without losing your conversion history or settings:
+
+- **Automatic Check on Launch**: By default, the app quietly checks GitHub Releases for new updates when started. When a new version is detected, an update dialog displays the release notes and provides a one-tap download and installation button.
+- **Manual Update Check**: You can check for updates at any time by navigating to **Settings (gear icon) > Software Update > Check for Updates**.
+- **Configure Auto-Updates**: You can enable or disable automatic update checks at launch through the toggle in **Settings > Software Update**.
+- **Direct Sideload Update**: You can also download the latest `SDOCX_Converter.apk` from GitHub Releases and install it directly over the existing app. Because the release keystore remains consistent across all releases, Android will update the existing package cleanly without conflict.
 
 ---
 

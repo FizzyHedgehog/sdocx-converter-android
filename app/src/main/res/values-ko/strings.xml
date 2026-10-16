@@ -143,6 +143,10 @@
     <string name="folder_saved_success">%1$d개 파일이 %2$s 폴더에 저장되었습니다.</string>
 
     <!-- 인앱 자동 업데이트 -->
+    <string name="section_software_update">소프트웨어 업데이트</string>
+    <string name="current_version_format">현재 버전: v%1$s</string>
+    <string name="opt_auto_check_update">앱 실행 시 자동으로 새 버전 확인</string>
+    <string name="opt_auto_check_update_desc">체크를 해제하면 수동으로 \'업데이트 확인\'을 클릭할 때만 확인합니다.</string>
     <string name="check_for_updates">업데이트 확인</string>
     <string name="checking_updates">업데이트 확인 중…</string>
     <string name="latest_version_toast">현재 최신 버전(v%1$s)을 사용하고 있습니다.</string>

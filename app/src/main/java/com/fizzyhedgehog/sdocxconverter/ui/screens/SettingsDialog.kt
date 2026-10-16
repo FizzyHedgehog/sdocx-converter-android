@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +63,7 @@ fun SettingsDialog(
     var defaultSaveTreeName by remember { mutableStateOf(currentSettings.defaultSaveTreeName) }
     var notifyOnCompletion by remember { mutableStateOf(currentSettings.notifyOnCompletion) }
     var shareReceiveAction by remember { mutableStateOf(currentSettings.shareReceiveAction) }
+    var autoCheckUpdate by remember { mutableStateOf(currentSettings.autoCheckUpdate) }
 
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var availableUpdate by remember { mutableStateOf<UpdateInfo?>(null) }
@@ -435,117 +437,174 @@ fun SettingsDialog(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // 6. 버전 정보 및 인앱 업데이트
-                Row(
+                // 6. 소프트웨어 업데이트 (Software Update)
+                Text(
+                    text = stringResource(R.string.section_software_update),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                 ) {
                     Column(
                         modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable {
-                                if (developerModeEnabled) {
-                                    currentDevToast?.cancel()
-                                    currentDevToast = Toast.makeText(
-                                        context,
-                                        context.getString(R.string.toast_dev_already_enabled),
-                                        Toast.LENGTH_SHORT
-                                    ).also { it.show() }
-                                    return@clickable
-                                }
-
-                                val now = System.currentTimeMillis()
-                                if (now - lastDevTapTime > 3000L) {
-                                    devTapCount = 0
-                                }
-                                lastDevTapTime = now
-                                devTapCount++
-
-                                val remaining = 7 - devTapCount
-                                if (remaining in 1..3) {
-                                    currentDevToast?.cancel()
-                                    currentDevToast = Toast.makeText(
-                                        context,
-                                        context.getString(R.string.toast_dev_remaining, remaining),
-                                        Toast.LENGTH_SHORT
-                                    ).also { it.show() }
-                                } else if (remaining <= 0) {
-                                    devTapCount = 0
-                                    currentDevToast?.cancel()
-                                    showPinDialog = true
-                                }
-                            }
-                            .padding(vertical = 4.dp, horizontal = 2.dp)
+                            .fillMaxWidth()
+                            .padding(14.dp)
                     ) {
-                        Text(
-                            text = stringResource(R.string.app_version_label, appVersionName),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = stringResource(R.string.check_for_updates),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedButton(
-                        onClick = {
-                            if (!isCheckingUpdate && !isDownloadingUpdate) {
-                                isCheckingUpdate = true
-                                scope.launch {
-                                    val result = UpdateManager.checkUpdate(context)
-                                    isCheckingUpdate = false
-                                    result.onSuccess { info ->
-                                        if (info.hasUpdate) {
-                                            availableUpdate = info
-                                        } else {
-                                            Toast.makeText(
+                        // Upper row: Current version + [업데이트 확인] button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        if (developerModeEnabled) {
+                                            currentDevToast?.cancel()
+                                            currentDevToast = Toast.makeText(
                                                 context,
-                                                context.getString(R.string.latest_version_toast, info.currentVersion),
+                                                context.getString(R.string.toast_dev_already_enabled),
                                                 Toast.LENGTH_SHORT
-                                            ).show()
+                                            ).also { it.show() }
+                                            return@clickable
                                         }
-                                    }.onFailure { err ->
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.update_check_failed),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+
+                                        val now = System.currentTimeMillis()
+                                        if (now - lastDevTapTime > 3000L) {
+                                            devTapCount = 0
+                                        }
+                                        lastDevTapTime = now
+                                        devTapCount++
+
+                                        val remaining = 7 - devTapCount
+                                        if (remaining in 1..3) {
+                                            currentDevToast?.cancel()
+                                            currentDevToast = Toast.makeText(
+                                                context,
+                                                context.getString(R.string.toast_dev_remaining, remaining),
+                                                Toast.LENGTH_SHORT
+                                            ).also { it.show() }
+                                        } else if (remaining <= 0) {
+                                            devTapCount = 0
+                                            currentDevToast?.cancel()
+                                            showPinDialog = true
+                                        }
                                     }
+                                    .padding(vertical = 4.dp, horizontal = 2.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.current_version_format, appVersionName),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                if (availableUpdate != null) {
+                                    Text(
+                                        text = stringResource(R.string.update_available_version, availableUpdate?.latestVersion ?: "", appVersionName),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SamsungOrange
+                                    )
                                 }
                             }
-                        },
-                        shape = RoundedCornerShape(18.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        if (isCheckingUpdate) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp,
-                                color = SamsungOrange
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Button(
+                                onClick = {
+                                    if (!isCheckingUpdate && !isDownloadingUpdate) {
+                                        isCheckingUpdate = true
+                                        scope.launch {
+                                            val result = UpdateManager.checkUpdate(context)
+                                            isCheckingUpdate = false
+                                            result.onSuccess { info ->
+                                                if (info.hasUpdate) {
+                                                    availableUpdate = info
+                                                } else {
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.latest_version_toast, info.currentVersion),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }.onFailure { err ->
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.update_check_failed),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                if (isCheckingUpdate) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = SamsungOrange
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = stringResource(R.string.checking_updates),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                } else {
+                                    Text(
+                                        text = stringResource(R.string.check_for_updates),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Lower row: Checkbox + Description (Matching user's image)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { autoCheckUpdate = !autoCheckUpdate }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Checkbox(
+                                checked = autoCheckUpdate,
+                                onCheckedChange = { autoCheckUpdate = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = SamsungOrange,
+                                    checkmarkColor = Color.White
+                                ),
+                                modifier = Modifier.padding(end = 6.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(R.string.checking_updates),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Rounded.Refresh,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = SamsungOrange
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(R.string.check_for_updates),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = SamsungOrange,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.opt_auto_check_update),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.opt_auto_check_update_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -698,7 +757,8 @@ fun SettingsDialog(
                             defaultSaveTreeUri = defaultSaveTreeUri,
                             defaultSaveTreeName = defaultSaveTreeName,
                             notifyOnCompletion = notifyOnCompletion,
-                            shareReceiveAction = shareReceiveAction
+                            shareReceiveAction = shareReceiveAction,
+                            autoCheckUpdate = autoCheckUpdate
                         )
                     )
                     onDismiss()

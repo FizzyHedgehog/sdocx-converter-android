@@ -46,7 +46,8 @@ data class ConverterSettings(
     val defaultSaveTreeUri: String? = null,
     val defaultSaveTreeName: String? = null,
     val notifyOnCompletion: Boolean = true,
-    val shareReceiveAction: ShareReceiveAction = ShareReceiveAction.OPEN_APP
+    val shareReceiveAction: ShareReceiveAction = ShareReceiveAction.OPEN_APP,
+    val autoCheckUpdate: Boolean = true
 )
 
 object NativeConverter {

@@ -143,6 +143,10 @@
     <string name="folder_saved_success">%1$d files saved to %2$s folder.</string>
 
     <!-- In-App Self Update -->
+    <string name="section_software_update">Software Update</string>
+    <string name="current_version_format">Current version: v%1$s</string>
+    <string name="opt_auto_check_update">Automatically check for new versions on app launch</string>
+    <string name="opt_auto_check_update_desc">When unchecked, updates are only checked when clicking \'Check for Updates\' manually.</string>
     <string name="check_for_updates">Check for Updates</string>
     <string name="checking_updates">Checking for updates…</string>
     <string name="latest_version_toast">You are using the latest version (v%1$s).</string>
