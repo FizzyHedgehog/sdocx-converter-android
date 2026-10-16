@@ -10,6 +10,8 @@
     </queries>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:allowBackup="true"
@@ -55,6 +57,17 @@
                 <data android:pathPattern=".*\\.sdocx" />
             </intent-filter>
 
+        </activity>
+
+        <!-- 백그라운드 무음 자동 저장 및 즉시 재공유 전담 투명 액티비티 -->
+        <activity
+            android:name=".ShareHandlerActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Transparent"
+            android:excludeFromRecents="true"
+            android:noHistory="true">
+
             <!-- 안드로이드 공유 메뉴 연동 (단일 파일 공유) -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -68,7 +81,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
-
         </activity>
 
         <provider

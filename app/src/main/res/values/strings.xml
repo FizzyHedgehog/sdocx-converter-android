@@ -65,6 +65,20 @@
     <string name="btn_select_save_folder">Select Folder</string>
     <string name="btn_reset_save_folder">Reset</string>
 
+    <!-- Share receive action settings -->
+    <string name="section_share_action">Action on Received Share</string>
+    <string name="section_share_action_desc">Choose how the app handles notes shared from Samsung Notes or other apps.</string>
+    <string name="share_action_open_app_title">Default (Open App)</string>
+    <string name="share_action_open_app_desc">Opens the main app screen and adds notes to the queue.</string>
+    <string name="share_action_auto_save_title">Background Silent Auto-Save</string>
+    <string name="share_action_auto_save_desc">Converts in the background and saves PDF without opening the app.</string>
+    <string name="share_action_re_share_title">Instant Re-Share PDF</string>
+    <string name="share_action_re_share_desc">Converts in the background and immediately opens the system share sheet.</string>
+    <string name="toast_background_converting">Converting SDOCX to PDF…</string>
+    <string name="toast_background_save_complete">Saved: \'%1$s\'</string>
+    <string name="toast_background_save_multi_complete">%1$d PDF files saved successfully.</string>
+    <string name="toast_background_convert_error">Conversion failed: %1$s</string>
+
     <!-- Notifications -->
     <string name="section_notification">Notifications</string>
     <string name="notify_label">Notify on completion</string>
@@ -127,4 +141,40 @@
     <string name="error_native_not_loaded">Native conversion engine (libsdocx2pdf.so) not loaded.</string>
     <string name="error_unknown">Unknown error</string>
     <string name="folder_saved_success">%1$d files saved to %2$s folder.</string>
+
+    <!-- In-App Self Update -->
+    <string name="section_software_update">Software Update</string>
+    <string name="current_version_format">Current version: v%1$s</string>
+    <string name="opt_auto_check_update">Automatically check for new versions on app launch</string>
+    <string name="opt_auto_check_update_desc">When unchecked, updates are only checked when clicking \'Check for Updates\' manually.</string>
+    <string name="check_for_updates">Check for Updates</string>
+    <string name="checking_updates">Checking for updates…</string>
+    <string name="latest_version_toast">You are using the latest version (v%1$s).</string>
+    <string name="update_check_failed">Update check failed. Please check network connection.</string>
+    <string name="update_available_title">New Version Available</string>
+    <string name="update_available_version">Version %1$s is available (Current: %2$s)</string>
+    <string name="btn_update_now">Update Now</string>
+    <string name="btn_update_later">Later</string>
+    <string name="downloading_update">Downloading update…</string>
+    <string name="download_failed">Failed to download update: %1$s</string>
+    <string name="changelog_title">What\'s New</string>
+
+    <!-- Developer Mode & Testing -->
+    <string name="toast_dev_remaining">You are now %1$d steps away from being a developer.</string>
+    <string name="toast_dev_enabled">Developer mode has been turned on.</string>
+    <string name="toast_dev_already_enabled">Developer mode is already turned on.</string>
+    <string name="toast_dev_disabled">Developer mode has been turned off.</string>
+    <string name="dialog_pin_title">Enter Password</string>
+    <string name="dialog_pin_desc">Enter the password to activate Developer Mode.</string>
+    <string name="dialog_pin_hint">Password</string>
+    <string name="dialog_pin_wrong">Incorrect password. Please try again.</string>
+    <string name="section_developer">Developer Options</string>
+    <string name="dev_prerelease_label">Pre-release Channel</string>
+    <string name="dev_prerelease_desc">Detect Pre-release versions on GitHub as updates before public release.</string>
+    <string name="dev_bypass_version_label">Allow Same-Version Reinstall</string>
+    <string name="dev_bypass_version_desc">Allow downloading and reinstalling even when version numbers match.</string>
+    <string name="dev_simulate_update_btn">Simulate Update Dialog</string>
+    <string name="dev_simulated_version">1.2.0-preview</string>
+    <string name="dev_simulated_title">v1.2.0 Preview Release (Simulated)</string>
+    <string name="dev_simulated_notes">• Simulated update dialog test for Developer Mode\n• Background silent conversion improvements\n• S-Pen fine calibration settings</string>
 </resources>
