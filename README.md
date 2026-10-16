@@ -32,7 +32,7 @@ By directly parsing the native `.sdocx` container, all S Pen handwriting, marker
   - Multi-select multiple `.sdocx` files for simultaneous conversion.
   - Select an entire folder to automatically scan and import all Samsung Notes within it.
 - **Samsung Notes and System Integration**:
-  - Share directly from Samsung Notes: Long-press a note in Samsung Notes and choose `Share > SDOCX Converter` to start conversion immediately.
+  - Share directly from Samsung Notes with three configurable reception modes: **Default (Open App)**, **Background Silent Auto-Save**, and **Instant Re-Share PDF**.
   - Drag and drop support: Drag `.sdocx` files directly from the My Files app in split-screen mode.
 - **One-Tap PDF Viewing and Sharing**:
   - Tap any converted card to open the vector PDF directly in your default PDF reader.
@@ -46,8 +46,39 @@ By directly parsing the native `.sdocx` container, all S Pen handwriting, marker
   - Option to split wide continuous canvas notes vertically or horizontally.
 - **Background Conversion Notifications**:
   - System notifications alert you when large notes or batch conversions finish in the background.
-- **100% Offline and Private**:
-  - Powered by an embedded Rust native engine (`libsdocx2pdf.so`). All conversions run locally on your device without network requests or external telemetry.
+- **100% Offline Core Conversion**:
+  - Powered by an embedded Rust native engine (`libsdocx2pdf.so` via Git submodule). All document conversions run locally on your device without uploading files or external telemetry.
+
+---
+
+## Sharing Directly from Samsung Notes (Workflow & Modes)
+
+SDOCX Converter integrates directly into the Android system Share sheet, allowing you to convert single or multiple notes without manually exporting and importing files.
+
+### Prerequisites & How to Share
+
+1. **Configure Your Preferred Share Action (Optional)**:
+   - Open **SDOCX Converter > Settings (gear icon) > Action on Received Share** and select how the app should handle incoming shared files.
+2. **Select Notes in Samsung Notes**:
+   - Long-press one or more notes in your Samsung Notes list (or open a note and tap the **More (three dots)** menu) and tap **Share**.
+3. **Required Format Condition (`Samsung Notes file (.sdocx)`)**:
+   - When Samsung Notes asks which format to share, you **must select `Samsung Notes file (.sdocx)`**.
+   - *Important*: Do **not** select `PDF file` or `Image file` in Samsung Notes—those formats are already rasterized into low-resolution bitmaps by Samsung Notes before leaving the app. Selecting `Samsung Notes file (.sdocx)` passes the original vector note container to SDOCX Converter so it can reconstruct true lossless vector paths.
+4. **Choose SDOCX Converter**:
+   - In the Android system share sheet that appears, tap **SDOCX Converter**.
+
+### Available Share Reception Modes (Including 2 New Background Modes)
+
+In **Settings > Action on Received Share**, you can choose between the standard interactive mode and **two newly added zero-interruption background modes**:
+
+1. **Default (Open App)** *(Standard Mode)*
+   - Launches the SDOCX Converter main interface, imports the shared `.sdocx` file(s) into the queue, and converts them interactively inside the app where you can preview, manage, or manually export them.
+2. **Background Silent Auto-Save** *(New)*
+   - **How it works**: Converts the shared `.sdocx` file(s) in the background and saves the resulting vector PDF(s) directly to your configured save destination (**Downloads** folder by default, or any custom folder set under **Settings > Storage & Saving**) **without opening the SDOCX Converter window**.
+   - **What it enables**: You remain inside Samsung Notes with zero screen transitions or interruptions to your note-taking session. A compact 1.0-second floating pill banner briefly appears at the bottom of your screen (`Converting SDOCX to PDF...` -> `Saved: '...'`) to confirm that your vector PDF has been saved in the background.
+3. **Instant Re-Share PDF** *(New)*
+   - **How it works**: Converts the shared `.sdocx` file(s) to lossless vector PDF(s) silently in the background (while also saving a copy to your default save folder) and **immediately opens the Android system Share sheet with the newly generated `.pdf` file(s) attached**.
+   - **What it enables**: Acts as a direct **Vector PDF Bridge** from Samsung Notes to any external app—such as KakaoTalk, Slack, Gmail, Google Drive, Notion, Goodnotes, or Telegram. Instead of sharing a blurry rasterized PDF from Samsung Notes, or manually converting a file and searching for it in a file manager, you can send a crystal-clear vector PDF from Samsung Notes to any messenger, email client, or cloud drive in one continuous flow.
 
 ---
 
@@ -89,13 +120,13 @@ Please feel free to open a thread on [GitHub Issues](https://github.com/FizzyHed
 ```
 [ UI Layer (Kotlin + Jetpack Compose) ]
    ├── MainScreen (Two-Pane Tablet & Single-Column Phone Adaptive Layout)
-   ├── DropZone (Drag & Drop, SAF File / Tree Folder Intent)
-   ├── ConvertedPdfCard & QueueFileCard (StateFlow Reactive UI)
-   └── SettingsDialog (DataStore Preferences)
-                   │ (JNI / NDK Bridge)
+   ├── ShareReceiverActivity (Background Auto-Save, Floating Pill & Instant Re-Share)
+   ├── UpdateManager (GitHub Releases In-App Self-Updater)
+   └── SettingsDialog (SharedPreferences & SAF Persistence)
+                   │ (JNI / NDK Bridge: rust-core/src/lib.rs)
                    ▼
-[ Native Core (Rust) ]
-   ├── sdocx Parser (ZIP & Directory Container Extraction)
+[ Native Core (Rust Git Submodule: rust-core/sdocx2pdf) ]
+   ├── sdocx Parser (ZIP Container & Note Page Extraction)
    ├── Stroke & Shape Reconstructor (Path & Bezier Interpolation)
    └── krilla Vector Engine (PDF 1.7 Lossless Vector Generation)
 ```
@@ -103,7 +134,7 @@ Please feel free to open a thread on [GitHub Issues](https://github.com/FizzyHed
 - **UI Framework**: Android Jetpack Compose, Material 3, AndroidX
 - **Concurrency**: Kotlin Coroutines, StateFlow, ViewModel
 - **Storage**: Android Storage Access Framework (SAF), Scoped Storage, AndroidX FileProvider
-- **Native Engine**: Rust 2021, Cargo-NDK, `libsdocx2pdf.so` (ARM64-v8a)
+- **Native Engine**: Rust 2021, Cargo-NDK, `libsdocx2pdf.so` (ARM64-v8a) built from the `sdocx2pdf` Git submodule
 - **Minimum SDK**: Android 8.0 (API 26) / **Target SDK**: Android 15 (API 35)
 
 ---
