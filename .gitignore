@@ -1,6 +1,9 @@
 build/
 .gradle/
 local.properties
+.tools/
+app/src/main/jniLibs/
+dist-local/
 *.iml
 .idea/
 .DS_Store
