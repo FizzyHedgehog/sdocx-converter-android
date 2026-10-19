@@ -44,6 +44,7 @@ pub extern "system" fn Java_com_fizzyhedgehog_sdocxconverter_NativeConverter_con
         marker_scale as f32,
         auto_split != 0,
         basic_split,
+        false,
     ) {
         Ok(_) => 0,
         Err(_) => 1,
