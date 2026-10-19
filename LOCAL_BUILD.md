@@ -41,7 +41,17 @@ cd ~/Projects/sdocx-converter/sdocx-converter-android
 
 - APK 산출: `dist-local/SDOCX_Converter.apk` (GitHub Actions 산출물과 동일한 `app/keystore.jks`로 서명)
 - 빌드가 끝나면 자동으로 `~/Downloads/SDOCX_Converter.apk` 최신화 (기존 파일은 휴지통으로 이동 후 교체, 동일 내용이면 스킵)
-- 과거 APK 아카이브: `~/Projects/sdocx-android-local-build/dist/`
+
+## 4-A. 변경 이력 (History, 2026-10-20)
+
+> WorkBuddy AI 세션에서 진행된 전체 과정. antigravity 등 이후 작업자는 이력만 참고하면 된다.
+
+1. **(조사)** 기존에는 APK를 맥북에 저장하지 않고 GitHub Actions로 빌드 → Telegram 전달하는 정책이었다. 로컬 직접 빌드 가능 여부를 조사했고, 당시 맥에는 JDK 11만 있고 Android SDK/NDK/Gradle/cargo-ndk가 없음을 확인.
+2. **(격리 세팅)** `~/Projects/sdocx-android-local-build/` 폴더를 만들어 그 안에만 툴체인을 설치하고 소스를 복사해 빌드 검증: Temurin JDK 17.0.20.1, Gradle 8.11.1, Android SDK(platform-35, build-tools 35.0.0, NDK r26d), cargo-ndk 4.1.2. 결과: 약 13.5MB 서명 APK 산출 성공(Rust 57초 + Gradle 1분 48초). CI 실제 기록은 5~7분대여서 로컬이 약 2배 이상 빠름을 데이터로 확인.
+3. **(이식·사용자 승인)** 사용자 요청으로 원본 레포에 이식. 툴체인 5.3GB를 레포 내부 `.tools/`로 이동(이동이라 즉시 완료), 빌드/동기화 스크립트와 본 문서 추가, `.gitignore` 갱신. 커밋 `1c334c0` "ci: add local macOS APK build toolchain and scripts".
+4. **(교훈)** macOS TCC 보안정책으로 osascript(Finder 자동화)는 권한 위반 오류(-10004) 발생. 휴지통 이동을 Finder 없이 `~/.Trash`로 `mv`하는 방식으로 대체. `~/.Trash` 읽기(ls)도 TCC로 막혀 있으나 mv 쓰기는 정상.
+5. **(정리·사용자 요청)** 중복된 `sdocx-android-local-build/` 폴더(아카이브 용도로 남아있었음)는 2026-10-20 사용자 요청으로 삭제(휴지통 이동) 처리. 그 안의 검증 기록과 이력은 본 문서로 흡수 완료. 이후 이 레포가 로컬 빌드의 유일한 중심지다.
+6. **(현재 상태)** 본 레포에서 빌드 검증 완료(증분 Gradle 41초). 출력물 dist-local + Downloads 자동 동기화 체계 가동 중.
 
 ## 5. 주의사항
 
@@ -53,6 +63,6 @@ cd ~/Projects/sdocx-converter/sdocx-converter-android
 
 ## 6. 검증 이력
 
-- 2026-10-20: 본 레포에서 `./build-apk.sh` 최초 검증 성공 (상세 결과는 `~/Projects/sdocx-android-local-build/WORKLOG.md` 및 git 로그 참고)
+- 2026-10-20: 본 레포에서 `./build-apk.sh` 최초 검증 성공 (버전 1.3.0 / code 4, arm64-v8a, sha256 `7760c1f274f652bb1ee7e8f6d63d78f4bc842c976307ef4ef411747f95e5fbd8`)
 - 서명 검증: `apksigner verify --print-certs` — Signer #1 certificate DN: CN=FizzyHedgehog, OU=SDOCX, O=FizzyHedgehog, C=KR
 - 버전: versionName 1.3.0 / versionCode 4, arm64-v8a

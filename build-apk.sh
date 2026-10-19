@@ -12,7 +12,6 @@
 set -e
 BASE="$(cd "$(dirname "$0")" && pwd)"
 TOOLS="$BASE/.tools"
-ARCHIVE="${SDOCX_APK_ARCHIVE:-/Users/kyungmolee01/Projects/sdocx-android-local-build/dist}"
 
 export JAVA_HOME="$TOOLS/jdk17/Contents/Home"
 export ANDROID_HOME="$TOOLS/android-sdk"
@@ -36,15 +35,9 @@ fi
 echo "==> [2/3] Gradle assembleRelease"
 (cd "$BASE" && "$TOOLS/gradle-8.11.1/bin/gradle" assembleRelease --no-daemon)
 
-cp "$BASE/app/build/outputs/apk/release/app-release.apk" "$BASE/dist-local/SDOCX_Converter.apk" 2>/dev/null || {
-  mkdir -p "$BASE/dist-local"
-  cp "$BASE/app/build/outputs/apk/release/app-release.apk" "$BASE/dist-local/SDOCX_Converter.apk"
-}
+mkdir -p "$BASE/dist-local"
+cp "$BASE/app/build/outputs/apk/release/app-release.apk" "$BASE/dist-local/SDOCX_Converter.apk"
 echo "==> APK 산출: $BASE/dist-local/SDOCX_Converter.apk"
-
-if [ -d "$ARCHIVE" ]; then
-  cp "$BASE/dist-local/SDOCX_Converter.apk" "$ARCHIVE/SDOCX_Converter.apk"
-fi
 
 echo "==> [3/3] Downloads 폴더 최신화"
 "$BASE/sync-downloads.sh"
