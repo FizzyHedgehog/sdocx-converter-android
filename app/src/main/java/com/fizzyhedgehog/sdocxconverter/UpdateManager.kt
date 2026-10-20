@@ -31,6 +31,46 @@ object UpdateManager {
     private const val API_URL_RELEASES = "https://api.github.com/repos/$GITHUB_REPO/releases"
 
     /**
+     * Strip markdown and HTML syntax from a GitHub release body so it reads as clean
+     * plain text in the update dialog (which has no markdown renderer). The release
+     * page on GitHub keeps its full formatting.
+     */
+    fun sanitizeReleaseNotes(raw: String): String {
+        var text = raw
+
+        // Remove HTML tags (<p align="center">, <a name="...">, <b>, ...)
+        text = text.replace(Regex("<[^>]+>"), "")
+
+        // Markdown links [text](#anchor) -> text
+        text = text.replace(Regex("\\[([^]]*)]\\([^)]*\\)"), "$1")
+
+        val lines = text.lines().map { line ->
+            // Drop language-switcher lines ("English | 한국어" variants)
+            val t = line.trim()
+            if (Regex("^(English|한국어|Korean)\\s*\\|\\s*(English|한국어|Korean)$").matches(t)) {
+                return@map ""
+            }
+            // Drop horizontal rules
+            if (t == "---" || t == "***" || t == "___") {
+                return@map ""
+            }
+            // Strip heading markers ("## Title" -> "Title")
+            line.replace(Regex("^#{1,6}\\s*"), "")
+        }
+
+        text = lines.joinToString("\n")
+
+        // Bold/italic markers: **text** -> text, *text* -> text
+        text = text.replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")
+        text = text.replace(Regex("\\*([^*\\n]+)\\*"), "$1")
+
+        // Collapse 3+ consecutive blank lines into one blank line
+        text = text.replace(Regex("\n{3,}"), "\n\n")
+
+        return text.trim()
+    }
+
+    /**
      * Compare semantic versions (e.g. "1.1.0" > "1.0.0").
      * Returns true if latestVersion is strictly newer than currentVersion.
      */
@@ -144,7 +184,7 @@ object UpdateManager {
                     latestVersion = tagName.removePrefix("v").removePrefix("V"),
                     currentVersion = currentVersion,
                     releaseTitle = title,
-                    releaseNotes = body,
+                    releaseNotes = sanitizeReleaseNotes(body),
                     apkDownloadUrl = apkUrl,
                     apkSize = apkSize
                 )
