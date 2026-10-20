@@ -31,7 +31,7 @@ By directly parsing the native `.sdocx` container, all S Pen handwriting, marker
 
 - **Lossless Vector Graphic Rendering**: Converts handwriting, highlights, formulas, geometric shapes, typed text, and embedded images into smooth vector curves without pixelation.
 - **Full Typed-Text Layout**: Typed text is laid out with true glyph font metrics, block flow layout, and Korean syllable-level line wrapping, so mixed handwriting-and-text notes render completely and in the right places.
-- **Embedded Fonts (Korean & Latin)**: The engine embeds **NanumBarunGothic** (Regular/Bold, SIL Open Font License) and renders all text with it, so output looks identical on every device regardless of installed system fonts.
+- **Embedded Fonts (Korean & Latin)**: The engine embeds **NanumBarunGothic** (Regular/Bold, SIL Open Font License) and renders all text with it, so every device produces the same output. Layout fidelity depends on the font a note was written with: notes written with Samsung's default fonts render most faithfully; notes in other fonts may see slightly shifted line breaks or glyph placement, because the metrics no longer match.
 - **Rich Text Styling**: Bold, italic, underline, strikethrough, paragraph alignment (left/center/right), and bulleted or numbered lists are all carried into the PDF.
 - **Dashed & Dotted Strokes**: Dashed and dotted pen and shape strokes render as true vector dash/dot patterns (spacing calibrated against Samsung Notes' own rendering) instead of solid lines.
 - **All Image Formats (JPEG & PNG)**: Embedded images support rotation, floating-image avoidance around text, background images, and clear text margins.
@@ -204,7 +204,7 @@ Please feel free to open a thread on [GitHub Issues](https://github.com/FizzyHed
 
 - **무손실 벡터 그래픽 렌더링**: 손글씨, 형광펜, 수식, 도형, 타이핑 텍스트, 삽입 이미지를 픽셀화 없이 부드러운 벡터 곡선으로 변환합니다.
 - **전체 타이핑 텍스트 레이아웃**: 타이핑 텍스트를 실제 글리프 폰트 메트릭, 블록 흐름 레이아웃, 한글 음절 단위 줄바꿈으로 배치하여, 손글씨와 텍스트가 섞인 노트도 빠짐없이 올바른 위치에 렌더링됩니다.
-- **내장 폰트 (한글 & 라틴)**: 엔진에 **나눔바른고딕**(Regular/Bold, SIL Open Font License)을 내장하여 모든 텍스트를 렌더링하므로, 기기에 설치된 시스템 폰트와 무관하게 동일한 결과가 나옵니다.
+- **내장 폰트 (한글 & 라틴)**: 엔진에 **나눔바른고딕**(Regular/Bold, SIL Open Font License)을 내장하여 모든 텍스트를 렌더링하므로, 어떤 기기에서도 동일한 결과가 나옵니다. 단, 레이아웃 충실도는 노트를 작성한 폰트에 따라 다릅니다 — 삼성 기본 폰트로 작성한 노트가 가장 정확하고, 다른 폰트로 작성한 노트는 메트릭이 맞지 않아 줄바꿈이 밀리거나 글자 배치가 달라질 수 있습니다.
 - **리치 텍스트 서식**: 볼드, 이탤릭, 밑줄, 취소선, 문단 정렬(왼쪽/가운데/오른쪽), 불릿/번호 목록이 모두 PDF에 반영됩니다.
 - **파선·점선 획**: 파선과 점선 펜·도형 획이 실선이 아닌 실제 벡터 파선/점선 패턴으로 렌더링됩니다(간격은 삼성노트 자체 렌더링 기준으로 보정).
 - **모든 이미지 포맷 (JPEG & PNG)**: 삽입 이미지는 회전, 텍스트 주변 플로팅 회피, 배경 이미지, 텍스트 여백 확보를 지원합니다.
