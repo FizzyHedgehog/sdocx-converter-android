@@ -63,6 +63,7 @@ cd ~/Projects/sdocx-converter/sdocx-converter-android
 
 ## 6. 검증 이력
 
-- 2026-10-20: 본 레포에서 `./build-apk.sh` 최초 검증 성공 (버전 1.3.0 / code 4, arm64-v8a, sha256 `7760c1f274f652bb1ee7e8f6d63d78f4bc842c976307ef4ef411747f95e5fbd8`)
+- 2026-10-20: 본 레포에서 `./build-apk.sh` 최초 검증 성공 (versionName 1.2.0 / code 4, arm64-v8a)
 - 서명 검증: `apksigner verify --print-certs` — Signer #1 certificate DN: CN=FizzyHedgehog, OU=SDOCX, O=FizzyHedgehog, C=KR
-- 버전: versionName 1.3.0 / versionCode 4, arm64-v8a
+- 버전: versionName 1.2.0 / versionCode 4, arm64-v8a
+- 배포 APK(v1.2.0 릴리스 에셋) sha256: `28468782fd67310731e01d1e684a7cc9875d044c605109501eff1245f862d5f9` (13,481,912B)
