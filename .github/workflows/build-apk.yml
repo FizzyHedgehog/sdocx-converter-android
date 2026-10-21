@@ -1,8 +1,9 @@
 name: Build Android APK
 
+# 릴리스 APK의 빌드 경로는 로컬(build-apk.sh + .tools/) 하나입니다.
+# 이 워크플로우는 클린 체크아웃 빌드 검증이 필요할 때만 수동 실행합니다.
+# (릴리스 keystore는 보안상 공개 저장소에 없으므로, 수동 실행 시 서명은 별도 조치가 필요합니다.)
 on:
-  push:
-    branches: [ main, "feature/**" ]
   workflow_dispatch:
 
 jobs:
