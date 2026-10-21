@@ -22,11 +22,24 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = file("keystore.jks")
-            storePassword = "***REMOVED***"
-            keyAlias = "sdocx"
-            keyPassword = "***REMOVED***"
+        // keystore.jks는 보안상 저장소에서 제거됨 (2026-10-21). 로컬 빌드 머신에만 존재하며,
+        // 비밀번호는 gradle.properties(gitignore 대상) 또는 환경변수로만 주입한다. 하드코딩 금지.
+        val keystoreFile = file("keystore.jks")
+        if (keystoreFile.exists()) {
+            val storePw = System.getenv("SDOCX_STORE_PASSWORD")
+                ?: project.findProperty("SDOCX_STORE_PASSWORD") as String?
+            val keyPw = System.getenv("SDOCX_KEY_PASSWORD")
+                ?: project.findProperty("SDOCX_KEY_PASSWORD") as String?
+            require(!storePw.isNullOrBlank() && !keyPw.isNullOrBlank()) {
+                "서명 비밀번호가 없습니다. \$GRADLE_USER_HOME/gradle.properties 또는 환경변수에 " +
+                    "SDOCX_STORE_PASSWORD / SDOCX_KEY_PASSWORD 를 설정하세요."
+            }
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = storePw
+                keyAlias = "sdocx"
+                keyPassword = keyPw
+            }
         }
     }
 
@@ -38,7 +51,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfigs.findByName("release")?.let { cs -> signingConfig = cs }
         }
     }
 

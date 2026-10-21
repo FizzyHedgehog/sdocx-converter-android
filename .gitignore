@@ -12,3 +12,7 @@ __pycache__/
 *.pyc
 PROJECT_CONTEXT.md
 scripts/
+
+# 릴리스 서명 키 — 절대 커밋 금지 (2026-10-21 보안 조치: 공개 저장소 노출 이력)
+app/keystore.jks
+*.jks
