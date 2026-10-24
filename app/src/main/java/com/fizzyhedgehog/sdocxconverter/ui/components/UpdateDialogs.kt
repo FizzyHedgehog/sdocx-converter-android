@@ -7,8 +7,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.fizzyhedgehog.sdocxconverter.R
 import com.fizzyhedgehog.sdocxconverter.UpdateInfo
+import com.fizzyhedgehog.sdocxconverter.UpdateManager
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 
 @Composable
@@ -27,6 +33,56 @@ fun UpdateAvailableDialog(
     onDismiss: () -> Unit,
     onUpdateClick: () -> Unit
 ) {
+    var showRotationConfirmDialog by remember { mutableStateOf(false) }
+    val needsRotationNotice = UpdateManager.needsKeyRotationNotice(updateInfo.currentVersion)
+
+    if (showRotationConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showRotationConfirmDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Rounded.WarningAmber,
+                    contentDescription = null,
+                    tint = SamsungOrange,
+                    modifier = Modifier.size(36.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.key_rotation_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.key_rotation_dialog_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = 20.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRotationConfirmDialog = false
+                        onUpdateClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SamsungOrange)
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_proceed_update),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRotationConfirmDialog = false }) {
+                    Text(text = stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = {
@@ -93,11 +149,58 @@ fun UpdateAvailableDialog(
                         )
                     }
                 }
+
+                if (needsRotationNotice) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = SamsungOrange.copy(alpha = 0.12f)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.WarningAmber,
+                                contentDescription = null,
+                                tint = SamsungOrange,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 2.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.key_rotation_notice_title),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SamsungOrange
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.key_rotation_notice_summary),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 16.sp
+                                )
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = onUpdateClick,
+                onClick = {
+                    if (needsRotationNotice) {
+                        showRotationConfirmDialog = true
+                    } else {
+                        onUpdateClick()
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = SamsungOrange)
             ) {
                 Text(

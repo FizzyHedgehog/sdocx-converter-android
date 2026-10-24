@@ -100,6 +100,7 @@ object ConversionHelper {
         val itemDir = File(File(context.filesDir, "converted_pdfs"), uniqueId).apply { mkdirs() }
         val finalLocalPdf = File(itemDir, pdfName)
 
+        var conversionSucceeded = false
         try {
             // 1. Content URI -> 로컬 임시 파일 복사
             context.contentResolver.openInputStream(uri)?.use { input ->
@@ -137,8 +138,6 @@ object ConversionHelper {
                 )
             }
 
-            tempInput.delete()
-
             // 3. FileProvider Content URI 생성
             val fileProviderUri = FileProvider.getUriForFile(
                 context,
@@ -162,6 +161,7 @@ object ConversionHelper {
                 isSaved = (deviceUri != null)
             }
 
+            conversionSucceeded = true
             return ConversionResult(
                 success = true,
                 localPdfFile = finalLocalPdf,
@@ -172,12 +172,18 @@ object ConversionHelper {
                 savedDeviceUri = deviceUri
             )
         } catch (e: Exception) {
-            tempInput.delete()
             return ConversionResult(
                 success = false,
                 pdfName = pdfName,
                 errorMessage = e.localizedMessage ?: context.getString(R.string.error_unknown)
             )
+        } finally {
+            if (tempInput.exists()) {
+                tempInput.delete()
+            }
+            if (!conversionSucceeded && !finalLocalPdf.exists()) {
+                itemDir.deleteRecursively()
+            }
         }
     }
 
@@ -265,7 +271,11 @@ object ConversionHelper {
             if (downloadDir.exists() || downloadDir.mkdirs()) {
                 val destFile = File(downloadDir, displayName)
                 srcFile.copyTo(destFile, overwrite = true)
-                return Uri.fromFile(destFile)
+                return try {
+                    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", destFile)
+                } catch (_: Exception) {
+                    Uri.fromFile(destFile)
+                }
             }
         } catch (_: Exception) {}
 

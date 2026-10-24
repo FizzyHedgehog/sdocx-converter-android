@@ -158,6 +158,11 @@
     <string name="downloading_update">Downloading update…</string>
     <string name="download_failed">Failed to download update: %1$s</string>
     <string name="changelog_title">What\'s New</string>
+    <string name="key_rotation_notice_title">Security Certificate Updated</string>
+    <string name="key_rotation_notice_summary">The signing key has been updated for security. Updating over v1.2.0 or earlier may fail with \'App not installed\'. If so, please uninstall the current app and reinstall (converted PDFs are preserved).</string>
+    <string name="key_rotation_dialog_title">Security Certificate Notice</string>
+    <string name="key_rotation_dialog_message">The app signing key has been updated to strengthen security.\n\nDue to Android security policies, directly updating over an existing version (v1.2.0 or earlier) may cause an \'App not installed\' (signature mismatch) error.\n\nIf installation fails, please uninstall the current app first and reinstall the newly downloaded APK.\n(Your converted PDF documents on the device will NOT be deleted.)\n\nDo you want to proceed with the update?</string>
+    <string name="btn_proceed_update">Proceed</string>
 
     <!-- Developer Mode & Testing -->
     <string name="toast_dev_remaining">You are now %1$d steps away from being a developer.</string>

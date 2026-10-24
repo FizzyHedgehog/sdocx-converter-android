@@ -37,16 +37,21 @@ pub extern "system" fn Java_com_fizzyhedgehog_sdocxconverter_NativeConverter_con
     let in_path = Path::new(&input);
     let out_path = Path::new(&output);
 
-    match convert_sdocx_to_pdf(
-        in_path,
-        out_path,
-        pen_scale as f32,
-        marker_scale as f32,
-        auto_split != 0,
-        basic_split,
-        false,
-    ) {
-        Ok(_) => 0,
-        Err(_) => 1,
+    let result = std::panic::catch_unwind(|| {
+        convert_sdocx_to_pdf(
+            in_path,
+            out_path,
+            pen_scale as f32,
+            marker_scale as f32,
+            auto_split != 0,
+            basic_split,
+            false,
+        )
+    });
+
+    match result {
+        Ok(Ok(_)) => 0,
+        Ok(Err(_)) => 1,
+        Err(_) => -3, // Engine panicked: caught safely without crashing the JVM
     }
 }

@@ -92,6 +92,16 @@ object UpdateManager {
     }
 
     /**
+     * Check whether the user is upgrading from an old-key release (<= 1.3.0).
+     * Releases prior to the key rotation (v1.0.0 ~ v1.2.0 and the v1.3.0 preview build)
+     * were signed with the old release keystore. Upgrading to a new-key release requires
+     * a clean reinstall because Android rejects package signatures that differ.
+     */
+    fun needsKeyRotationNotice(currentVersion: String): Boolean {
+        return !isNewerVersion(currentVersion, "1.3.0")
+    }
+
+    /**
      * Query GitHub Releases API for updates. Supports stable and pre-release channels.
      */
     suspend fun checkUpdate(
@@ -230,7 +240,7 @@ object UpdateManager {
                 if (code in listOf(301, 302, 303, 307, 308) && redirectCount < 8) {
                     val location = conn.getHeaderField("Location") ?: break
                     conn.disconnect()
-                    curUrl = location
+                    curUrl = URL(URL(curUrl), location).toString()
                     redirectCount++
                 } else {
                     break
@@ -252,6 +262,26 @@ object UpdateManager {
                     }
                     output.flush()
                 }
+            }
+
+            if (totalBytes > 0 && downloadedBytes < totalBytes) {
+                if (apkFile.exists()) {
+                    apkFile.delete()
+                }
+                return@withContext Result.failure(
+                    java.io.IOException("Incomplete download: received $downloadedBytes of $totalBytes bytes")
+                )
+            }
+
+            // Verify downloaded APK package integrity before presenting for install
+            val archiveInfo = context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+            if (archiveInfo == null || archiveInfo.packageName != context.packageName) {
+                if (apkFile.exists()) {
+                    apkFile.delete()
+                }
+                return@withContext Result.failure(
+                    SecurityException("Downloaded file is not a valid APK package for ${context.packageName}")
+                )
             }
 
             Result.success(apkFile)
