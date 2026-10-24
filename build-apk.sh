@@ -18,6 +18,7 @@ export ANDROID_HOME="$TOOLS/android-sdk"
 export ANDROID_NDK_ROOT="$TOOLS/android-sdk/ndk/26.3.11579264"
 export GRADLE_USER_HOME="$TOOLS/gradle-home"
 export PATH="$TOOLS/cargo-ndk/bin:$PATH"
+export RUSTFLAGS="--remap-path-prefix=$HOME=/build"
 
 if [ ! -d "$TOOLS/android-sdk/ndk" ]; then
   echo "[오류] 로컬 빌드 툴체인이 없습니다: $TOOLS"
