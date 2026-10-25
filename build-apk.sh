@@ -39,6 +39,3 @@ echo "==> [2/3] Gradle assembleRelease"
 mkdir -p "$BASE/dist-local"
 cp "$BASE/app/build/outputs/apk/release/app-release.apk" "$BASE/dist-local/SDOCX_Converter.apk"
 echo "==> APK 산출: $BASE/dist-local/SDOCX_Converter.apk"
-
-echo "==> [3/3] Downloads 폴더 최신화"
-"$BASE/sync-downloads.sh"

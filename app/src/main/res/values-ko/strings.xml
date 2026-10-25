@@ -42,6 +42,7 @@
     <string name="title_about">앱 정보 및 오픈소스 라이선스</string>
     <string name="pen_scale_label">펜 굵기 배율</string>
     <string name="marker_scale_label">형광펜 굵기 배율</string>
+    <string name="marker_opacity_label">형광펜 불투명도</string>
     <string name="status_pending">대기 중</string>
     <string name="status_converting">변환 중…</string>
     <string name="status_completed">변환 완료</string>
@@ -182,4 +183,24 @@
     <string name="dev_simulated_version">1.2.0-preview</string>
     <string name="dev_simulated_title">v1.2.0 사전 테스트 버전 (시뮬레이션)</string>
     <string name="dev_simulated_notes">• 개발자 모드 전용 인앱 업데이트 시뮬레이션 테스트\n• 삼성 노트 백그라운드 무음 자동 저장 최적화 (1.0초 알림)\n• 갤럭시 태블릿 One UI 테마 통일\n• 펜/형광펜 정밀 굵기 배율 적용</string>
+
+    <!-- PDF 병합 및 공유 설정 -->
+    <string name="setting_always_share_individually_title">항상 개별 파일로 공유</string>
+    <string name="setting_always_share_individually_desc">여러 파일 공유 시 병합 여부를 묻지 않고 항상 개별 파일로 공유합니다.</string>
+    <string name="share_choice_dialog_title">다중 파일 공유</string>
+    <string name="share_choice_dialog_message">선택한 %1$d개의 문서를 어떻게 공유할까요?</string>
+    <string name="btn_share_separately">개별 파일로 공유</string>
+    <string name="btn_merge_and_share">하나의 PDF로 병합하여 공유</string>
+    <string name="save_choice_dialog_title">다중 파일 저장</string>
+    <string name="save_choice_dialog_message">선택한 %1$d개의 문서를 어떻게 저장할까요?</string>
+    <string name="btn_save_separately">개별 파일로 저장</string>
+    <string name="btn_merge_and_save">하나의 PDF로 병합하여 저장</string>
+    <string name="reorder_dialog_title">병합 순서 지정</string>
+    <string name="reorder_dialog_desc">문서를 원하는 순서로 정렬하여 하나의 PDF로 공유합니다.</string>
+    <string name="btn_confirm_merge_and_share">이 순서로 합쳐서 공유</string>
+    <string name="btn_confirm_merge_and_save">이 순서로 합쳐서 저장</string>
+    <string name="output_pdf_name_label">병합 PDF 파일명</string>
+    <string name="toast_merging_pdf">PDF 문서를 하나로 합치는 중…</string>
+    <string name="toast_merge_failed">PDF 병합에 실패했습니다.</string>
+    <string name="toast_merge_saved_downloads">병합된 PDF를 다운로드 폴더에 저장했습니다.</string>
 </resources>

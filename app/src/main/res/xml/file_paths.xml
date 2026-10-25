@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="all_files" path="." />
+    <cache-path name="all_cache" path="." />
     <files-path name="converted_pdfs" path="converted_pdfs/" />
     <cache-path name="apk_updates" path="apk_updates/" />
     <cache-path name="cache_pdfs" path="cache_pdfs/" />
+    <cache-path name="merged_pdfs" path="merged_pdfs/" />
 </paths>

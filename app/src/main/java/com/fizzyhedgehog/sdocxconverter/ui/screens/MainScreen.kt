@@ -32,6 +32,7 @@ import com.fizzyhedgehog.sdocxconverter.ConversionHelper
 import com.fizzyhedgehog.sdocxconverter.ConversionStatus
 import com.fizzyhedgehog.sdocxconverter.ConverterViewModel
 import com.fizzyhedgehog.sdocxconverter.R
+import com.fizzyhedgehog.sdocxconverter.SdocxFileItem
 import com.fizzyhedgehog.sdocxconverter.UpdateInfo
 import com.fizzyhedgehog.sdocxconverter.UpdateManager
 import com.fizzyhedgehog.sdocxconverter.ui.components.AddSourceDialog
@@ -45,6 +46,9 @@ import com.fizzyhedgehog.sdocxconverter.ui.components.openPdf
 import com.fizzyhedgehog.sdocxconverter.ui.components.openPdfFolder
 import com.fizzyhedgehog.sdocxconverter.ui.components.shareMultiplePdfs
 import com.fizzyhedgehog.sdocxconverter.ui.components.sharePdf
+import com.fizzyhedgehog.sdocxconverter.ui.components.MultiFileChoiceDialog
+import com.fizzyhedgehog.sdocxconverter.ui.components.PdfReorderMergeDialog
+import com.fizzyhedgehog.sdocxconverter.ui.components.MergeDialogMode
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SamsungOrange
 import com.fizzyhedgehog.sdocxconverter.ui.theme.SuccessGreen
 import kotlinx.coroutines.launch
@@ -70,6 +74,11 @@ fun MainScreen(
     var showClearCompletedDialog by remember { mutableStateOf(false) }
     var showDeleteSelectedDialog by remember { mutableStateOf(false) }
     var showAddSourceDialog by remember { mutableStateOf(false) }
+    var showShareChoiceDialog by remember { mutableStateOf(false) }
+    var isChoiceSaveMode by remember { mutableStateOf(false) }
+    var mergeDialogMode by remember { mutableStateOf(MergeDialogMode.SHARE) }
+    var showPdfReorderMergeDialog by remember { mutableStateOf(false) }
+    var selectedItemsForShare by remember { mutableStateOf<List<SdocxFileItem>>(emptyList()) }
 
     var autoUpdateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var isDownloadingAutoUpdate by remember { mutableStateOf(false) }
@@ -398,11 +407,21 @@ fun MainScreen(
                                 ) {
                                     FilledTonalButton(
                                         onClick = {
-                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                            if (uris.isNotEmpty()) {
-                                                viewModel.exportBatchPdfsToDownloads(uris, context)
-                                                isSelectionMode = false
-                                                selectedIds = emptySet()
+                                            val selectedItems = completedItems.filter { selectedIds.contains(it.id) }
+                                            if (selectedItems.isNotEmpty()) {
+                                                if (selectedItems.size == 1 || settings.alwaysShareIndividually) {
+                                                    val uris = selectedItems.mapNotNull { it.outputPdfUri }
+                                                    if (uris.isNotEmpty()) {
+                                                        viewModel.exportBatchPdfsToDownloads(uris, context)
+                                                        isSelectionMode = false
+                                                        selectedIds = emptySet()
+                                                    }
+                                                } else {
+                                                    selectedItemsForShare = selectedItems
+                                                    isChoiceSaveMode = true
+                                                    mergeDialogMode = MergeDialogMode.SAVE_TO_DOWNLOADS
+                                                    showShareChoiceDialog = true
+                                                }
                                             }
                                         },
                                         enabled = selectedIds.isNotEmpty(),
@@ -416,8 +435,18 @@ fun MainScreen(
 
                                     Button(
                                         onClick = {
-                                            val uris = completedItems.filter { selectedIds.contains(it.id) }.mapNotNull { it.outputPdfUri }
-                                            if (uris.isNotEmpty()) shareMultiplePdfs(context, uris)
+                                            val selectedItems = completedItems.filter { selectedIds.contains(it.id) }
+                                            if (selectedItems.isNotEmpty()) {
+                                                if (selectedItems.size == 1 || settings.alwaysShareIndividually) {
+                                                    val uris = selectedItems.mapNotNull { it.outputPdfUri }
+                                                    if (uris.isNotEmpty()) shareMultiplePdfs(context, uris)
+                                                } else {
+                                                    selectedItemsForShare = selectedItems
+                                                    isChoiceSaveMode = false
+                                                    mergeDialogMode = MergeDialogMode.SHARE
+                                                    showShareChoiceDialog = true
+                                                }
+                                            }
                                         },
                                         enabled = selectedIds.isNotEmpty(),
                                         modifier = Modifier.weight(1f),
@@ -1003,6 +1032,43 @@ fun MainScreen(
             progress = autoDownloadProgress,
             downloadedBytes = autoDownloadedBytes,
             totalBytes = autoTotalBytes
+        )
+    }
+
+    if (showShareChoiceDialog) {
+        MultiFileChoiceDialog(
+            selectedCount = selectedItemsForShare.size,
+            isSaveMode = isChoiceSaveMode,
+            onDismiss = { showShareChoiceDialog = false },
+            onIndividualAction = {
+                showShareChoiceDialog = false
+                val uris = selectedItemsForShare.mapNotNull { it.outputPdfUri }
+                if (uris.isNotEmpty()) {
+                    if (isChoiceSaveMode) {
+                        viewModel.exportBatchPdfsToDownloads(uris, context)
+                        isSelectionMode = false
+                        selectedIds = emptySet()
+                    } else {
+                        shareMultiplePdfs(context, uris)
+                    }
+                }
+            },
+            onMergeAction = {
+                showShareChoiceDialog = false
+                showPdfReorderMergeDialog = true
+            }
+        )
+    }
+
+    if (showPdfReorderMergeDialog) {
+        PdfReorderMergeDialog(
+            initialItems = selectedItemsForShare,
+            mode = mergeDialogMode,
+            onDismiss = { showPdfReorderMergeDialog = false },
+            onMergeCompleted = {
+                isSelectionMode = false
+                selectedIds = emptySet()
+            }
         )
     }
 }

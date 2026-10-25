@@ -40,6 +40,7 @@ object ConversionHelper {
         return ConverterSettings(
             penScale = prefs.getFloat("pen_scale", 1.5f).toDouble(),
             markerScale = prefs.getFloat("marker_scale", 1.0f).toDouble(),
+            markerOpacity = prefs.getFloat("marker_opacity", 0.35f).toDouble(),
             splitOption = prefs.getString("split_option", "") ?: "",
             autoSplit = prefs.getBoolean("auto_split", false),
             autoSave = prefs.getBoolean("auto_save", false),
@@ -47,7 +48,8 @@ object ConversionHelper {
             defaultSaveTreeName = prefs.getString("default_save_tree_name", null),
             notifyOnCompletion = prefs.getBoolean("notify_on_completion", true),
             shareReceiveAction = ShareReceiveAction.fromKey(prefs.getString("share_receive_action", ShareReceiveAction.OPEN_APP.key)),
-            autoCheckUpdate = prefs.getBoolean("auto_check_update", true)
+            autoCheckUpdate = prefs.getBoolean("auto_check_update", true),
+            alwaysShareIndividually = prefs.getBoolean("always_share_individually", true)
         )
     }
 
@@ -56,6 +58,7 @@ object ConversionHelper {
         prefs.edit().apply {
             putFloat("pen_scale", newSettings.penScale.toFloat())
             putFloat("marker_scale", newSettings.markerScale.toFloat())
+            putFloat("marker_opacity", newSettings.markerOpacity.toFloat())
             putString("split_option", newSettings.splitOption)
             putBoolean("auto_split", newSettings.autoSplit)
             putBoolean("auto_save", newSettings.autoSave)
@@ -64,6 +67,7 @@ object ConversionHelper {
             putBoolean("notify_on_completion", newSettings.notifyOnCompletion)
             putString("share_receive_action", newSettings.shareReceiveAction.key)
             putBoolean("auto_check_update", newSettings.autoCheckUpdate)
+            putBoolean("always_share_individually", newSettings.alwaysShareIndividually)
             apply()
         }
     }
@@ -120,6 +124,7 @@ object ConversionHelper {
                     outputPath = finalLocalPdf.absolutePath,
                     penScale = settings.penScale,
                     markerScale = settings.markerScale,
+                    markerOpacity = settings.markerOpacity,
                     splitOption = settings.splitOption,
                     autoSplit = settings.autoSplit
                 )
@@ -331,6 +336,95 @@ object ConversionHelper {
             e.printStackTrace()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    data class MergedPdfResult(
+        val file: File,
+        val uri: Uri,
+        val name: String
+    )
+
+    fun mergePdfItems(
+        context: Context,
+        items: List<SdocxFileItem>,
+        customOutputName: String? = null
+    ): MergedPdfResult? {
+        if (items.isEmpty()) return null
+
+        val uniqueId = UUID.randomUUID().toString().take(8)
+        val mergedDir = File(File(context.filesDir, "converted_pdfs"), "merged_${uniqueId}").apply { mkdirs() }
+
+        val baseName = if (!customOutputName.isNullOrBlank()) {
+            if (customOutputName.endsWith(".pdf", ignoreCase = true)) {
+                customOutputName.substringBeforeLast(".")
+            } else {
+                customOutputName
+            }
+        } else {
+            val firstTitle = items.firstOrNull()?.name?.substringBeforeLast(".") ?: "document"
+            if (items.size > 1) "${firstTitle}_외_${items.size - 1}개_합본" else "${firstTitle}_합본"
+        }
+        val finalPdfName = "$baseName.pdf"
+        val finalMergedFile = File(mergedDir, finalPdfName)
+
+        val localFilesToMerge = mutableListOf<File>()
+        val tempFilesToDelete = mutableListOf<File>()
+
+        try {
+            for (item in items) {
+                val localPath = item.localPdfPath
+                if (localPath != null && File(localPath).exists()) {
+                    localFilesToMerge.add(File(localPath))
+                } else if (item.outputPdfUri != null) {
+                    val tempF = File(mergedDir, "temp_src_${UUID.randomUUID().toString().take(8)}.pdf")
+                    context.contentResolver.openInputStream(item.outputPdfUri)?.use { input ->
+                        FileOutputStream(tempF).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    if (tempF.exists() && tempF.length() > 0L) {
+                        localFilesToMerge.add(tempF)
+                        tempFilesToDelete.add(tempF)
+                    }
+                }
+            }
+
+            android.util.Log.d("ConversionHelper", "mergePdfItems: collected ${localFilesToMerge.size} files out of ${items.size} items")
+            if (localFilesToMerge.isEmpty()) {
+                android.util.Log.e("ConversionHelper", "mergePdfItems: no valid local files to merge")
+                return null
+            }
+
+            val inputPaths = localFilesToMerge.map { it.absolutePath }.toTypedArray()
+            android.util.Log.d("ConversionHelper", "Calling mergePdfsNative, out: ${finalMergedFile.absolutePath}")
+            val exitCode = NativeConverter.mergePdfsNative(inputPaths, finalMergedFile.absolutePath)
+            android.util.Log.d("ConversionHelper", "mergePdfsNative returned exitCode=$exitCode, exists=${finalMergedFile.exists()}, len=${finalMergedFile.length()}")
+
+            if (exitCode != 0 || !finalMergedFile.exists() || finalMergedFile.length() == 0L) {
+                android.util.Log.e("ConversionHelper", "mergePdfsNative failed with exitCode=$exitCode")
+                return null
+            }
+
+            val fileProviderUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                finalMergedFile
+            )
+
+            android.util.Log.d("ConversionHelper", "mergePdfItems succeeded: $fileProviderUri")
+            return MergedPdfResult(
+                file = finalMergedFile,
+                uri = fileProviderUri,
+                name = finalPdfName
+            )
+        } catch (e: Throwable) {
+            android.util.Log.e("ConversionHelper", "mergePdfItems exception", e)
+            return null
+        } finally {
+            for (f in tempFilesToDelete) {
+                try { f.delete() } catch (_: Exception) {}
+            }
         }
     }
 }

@@ -58,11 +58,13 @@ fun SettingsDialog(
     }
     var penScale by remember { mutableStateOf(currentSettings.penScale.toFloat()) }
     var markerScale by remember { mutableStateOf(currentSettings.markerScale.toFloat()) }
+    var markerOpacity by remember { mutableStateOf(currentSettings.markerOpacity.toFloat()) }
     var autoSave by remember { mutableStateOf(currentSettings.autoSave) }
     var defaultSaveTreeUri by remember { mutableStateOf(currentSettings.defaultSaveTreeUri) }
     var defaultSaveTreeName by remember { mutableStateOf(currentSettings.defaultSaveTreeName) }
     var notifyOnCompletion by remember { mutableStateOf(currentSettings.notifyOnCompletion) }
     var shareReceiveAction by remember { mutableStateOf(currentSettings.shareReceiveAction) }
+    var alwaysShareIndividually by remember { mutableStateOf(currentSettings.alwaysShareIndividually) }
     var autoCheckUpdate by remember { mutableStateOf(currentSettings.autoCheckUpdate) }
 
     var isCheckingUpdate by remember { mutableStateOf(false) }
@@ -141,6 +143,25 @@ fun SettingsDialog(
                     onValueChange = { markerScale = it },
                     valueRange = 0.5f..3.0f,
                     steps = 24,
+                    colors = SliderDefaults.colors(
+                        thumbColor = SamsungOrange,
+                        activeTrackColor = SamsungOrange
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 형광펜 불투명도 (기본 35%, 0%~100%)
+                Text(
+                    text = "${stringResource(R.string.marker_opacity_label)}: ${(markerOpacity * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Slider(
+                    value = markerOpacity,
+                    onValueChange = { markerOpacity = it },
+                    valueRange = 0.0f..1.0f,
+                    steps = 19,
                     colors = SliderDefaults.colors(
                         thumbColor = SamsungOrange,
                         activeTrackColor = SamsungOrange
@@ -375,6 +396,37 @@ fun SettingsDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 항상 개별 파일로 공유 스위치
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.setting_always_share_individually_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.setting_always_share_individually_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Switch(
+                        checked = alwaysShareIndividually,
+                        onCheckedChange = { alwaysShareIndividually = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = SamsungOrange
+                        )
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -756,6 +808,7 @@ fun SettingsDialog(
                         currentSettings.copy(
                             penScale = penScale.toDouble(),
                             markerScale = markerScale.toDouble(),
+                            markerOpacity = markerOpacity.toDouble(),
                             splitOption = currentSettings.splitOption,
                             autoSplit = currentSettings.autoSplit,
                             autoSave = autoSave,
@@ -763,7 +816,8 @@ fun SettingsDialog(
                             defaultSaveTreeName = defaultSaveTreeName,
                             notifyOnCompletion = notifyOnCompletion,
                             shareReceiveAction = shareReceiveAction,
-                            autoCheckUpdate = autoCheckUpdate
+                            autoCheckUpdate = autoCheckUpdate,
+                            alwaysShareIndividually = alwaysShareIndividually
                         )
                     )
                     onDismiss()

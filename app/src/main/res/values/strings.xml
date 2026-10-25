@@ -42,6 +42,7 @@
     <string name="title_about">About &amp; License</string>
     <string name="pen_scale_label">Pen Thickness Multiplier</string>
     <string name="marker_scale_label">Marker Thickness Multiplier</string>
+    <string name="marker_opacity_label">Marker Opacity</string>
     <string name="status_pending">Ready</string>
     <string name="status_converting">Converting…</string>
     <string name="status_completed">Completed</string>
@@ -182,4 +183,24 @@
     <string name="dev_simulated_version">1.2.0-preview</string>
     <string name="dev_simulated_title">v1.2.0 Preview Release (Simulated)</string>
     <string name="dev_simulated_notes">• Simulated update dialog test for Developer Mode\n• Background silent conversion improvements\n• S-Pen fine calibration settings</string>
+
+    <!-- PDF Merge and Share settings -->
+    <string name="setting_always_share_individually_title">Always Share Separately</string>
+    <string name="setting_always_share_individually_desc">When sharing multiple files, share them individually without asking to merge.</string>
+    <string name="share_choice_dialog_title">Share Multiple Files</string>
+    <string name="share_choice_dialog_message">How would you like to share the selected %1$d files?</string>
+    <string name="btn_share_separately">Share Separately</string>
+    <string name="btn_merge_and_share">Merge into Single PDF</string>
+    <string name="save_choice_dialog_title">Save Multiple Files</string>
+    <string name="save_choice_dialog_message">How would you like to save the selected %1$d files?</string>
+    <string name="btn_save_separately">Save Separately</string>
+    <string name="btn_merge_and_save">Merge into Single PDF</string>
+    <string name="reorder_dialog_title">Set Merge Order</string>
+    <string name="reorder_dialog_desc">Arrange the files in your desired order and share as a single PDF.</string>
+    <string name="btn_confirm_merge_and_share">Merge &amp; Share</string>
+    <string name="btn_confirm_merge_and_save">Merge &amp; Save</string>
+    <string name="output_pdf_name_label">Output PDF Name</string>
+    <string name="toast_merging_pdf">Merging PDF files…</string>
+    <string name="toast_merge_failed">Failed to merge PDF files.</string>
+    <string name="toast_merge_saved_downloads">Merged PDF saved to Downloads folder.</string>
 </resources>

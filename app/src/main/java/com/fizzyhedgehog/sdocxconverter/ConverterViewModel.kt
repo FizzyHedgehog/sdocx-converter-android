@@ -411,6 +411,7 @@ class ConverterViewModel : ViewModel() {
                         outputUri = result.fileProviderUri,
                         outputName = result.pdfName,
                         outputSize = result.pdfSizeBytes,
+                        localPath = result.localPdfFile?.absolutePath,
                         isSaved = result.isSavedToDevice,
                         deviceUri = result.savedDeviceUri
                     )
@@ -448,6 +449,7 @@ class ConverterViewModel : ViewModel() {
         outputUri: Uri?,
         outputName: String,
         outputSize: Long,
+        localPath: String? = null,
         isSaved: Boolean,
         deviceUri: Uri?
     ) {
@@ -458,6 +460,7 @@ class ConverterViewModel : ViewModel() {
                     outputPdfUri = outputUri,
                     outputPdfName = outputName,
                     outputPdfSizeBytes = outputSize,
+                    localPdfPath = localPath,
                     isSavedToDevice = isSaved,
                     savedDeviceUri = deviceUri
                 )

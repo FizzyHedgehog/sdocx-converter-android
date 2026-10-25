@@ -20,6 +20,7 @@ data class SdocxFileItem(
     val outputPdfUri: Uri? = null,
     val outputPdfName: String? = null,
     val outputPdfSizeBytes: Long = 0L,
+    val localPdfPath: String? = null,
     val parentFolderTreeUri: Uri? = null,
     val isSavedToDevice: Boolean = false,
     val savedDeviceUri: Uri? = null
@@ -40,6 +41,7 @@ enum class ShareReceiveAction(val key: String) {
 data class ConverterSettings(
     val penScale: Double = 1.5,
     val markerScale: Double = 1.0,
+    val markerOpacity: Double = 0.35,
     val splitOption: String = "",
     val autoSplit: Boolean = false,
     val autoSave: Boolean = false,
@@ -47,7 +49,8 @@ data class ConverterSettings(
     val defaultSaveTreeName: String? = null,
     val notifyOnCompletion: Boolean = true,
     val shareReceiveAction: ShareReceiveAction = ShareReceiveAction.OPEN_APP,
-    val autoCheckUpdate: Boolean = true
+    val autoCheckUpdate: Boolean = true,
+    val alwaysShareIndividually: Boolean = true
 )
 
 object NativeConverter {
@@ -69,7 +72,13 @@ object NativeConverter {
         outputPath: String,
         penScale: Double,
         markerScale: Double,
+        markerOpacity: Double,
         splitOption: String,
         autoSplit: Boolean
+    ): Int
+
+    external fun mergePdfsNative(
+        inputPaths: Array<String>,
+        outputPath: String
     ): Int
 }
